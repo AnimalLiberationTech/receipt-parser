@@ -30,7 +30,7 @@ jobs:
       - name: Deploy Function
         run: |
           appwrite functions create-deployment \
-            --functionId ${{ secrets.APPWRITE_FUNCTION_ID }} \
+            --function-id ${{ secrets.APPWRITE_FUNCTION_ID }} \
             --activate true \
             --entrypoint main.py \
             --code appwrite_functions/parse_from_url
