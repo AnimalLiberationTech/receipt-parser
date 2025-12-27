@@ -18,6 +18,18 @@ def split_list(lst, delimiter) -> list[list]:
     ]
 
 
+def get_proxies(logger) -> list[str]:
+    try:
+        # Fetch a list of free proxies
+        resp = requests.get("https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", timeout=5)
+        if resp.status_code == 200:
+            proxies = resp.text.strip().split("\n")
+            return proxies[:5]
+    except Exception as e:
+        logger.warning(f"Failed to fetch proxies: {e}")
+    return []
+
+
 def get_html(url: str, logger) -> str | None:
     # Common headers to mimic a real browser
     headers = {
@@ -67,6 +79,25 @@ def get_html(url: str, logger) -> str | None:
         logger.warning("cloudscraper GET %s response_code=%s", url, resp.status_code)
     except Exception as e:
         logger.error("cloudscraper GET %s %s", url, e)
+
+    # Try with proxies if direct connection fails
+    proxies = get_proxies(logger)
+    for proxy in proxies:
+        proxy_url = f"http://{proxy}"
+        logger.info(f"Trying with proxy: {proxy_url}")
+        
+        try:
+            # Use chrome120 with proxy
+            session = requests.Session(impersonate="chrome120")
+            session.proxies = {"http": proxy_url, "https": proxy_url}
+            session.headers.update(headers)
+            
+            resp = session.get(url, timeout=30)
+            if resp.status_code == 200:
+                return resp.text
+            logger.warning("proxy %s GET %s response_code=%s", proxy, url, resp.status_code)
+        except Exception as e:
+            logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
             
     return None
 
