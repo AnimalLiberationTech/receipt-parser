@@ -1,4 +1,5 @@
 import os
+import random
 import cloudscraper
 from curl_cffi import requests
 from itertools import groupby
@@ -21,10 +22,11 @@ def split_list(lst, delimiter) -> list[list]:
 def get_proxies(logger) -> list[str]:
     try:
         # Fetch a list of free proxies
-        resp = requests.get("https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", timeout=5)
+        resp = requests.get("https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", timeout=3)
         if resp.status_code == 200:
             proxies = resp.text.strip().split("\n")
-            return proxies[:5]
+            if proxies:
+                return random.sample(proxies, min(len(proxies), 3))
     except Exception as e:
         logger.warning(f"Failed to fetch proxies: {e}")
     return []
@@ -43,9 +45,8 @@ def get_html(url: str, logger) -> str | None:
         "Sec-Fetch-Site": "none",
         "Sec-Fetch-User": "?1",
     }
-
     # Try different impersonations to bypass protections
-    impersonations = ["chrome120", "safari15_3", "chrome"]
+    impersonations = ["chrome120", "safari15_3"]
     
     # First try with curl_cffi
     for imp in impersonations:
@@ -56,14 +57,14 @@ def get_html(url: str, logger) -> str | None:
             
             # Visit root first to establish session/cookies
             try:
-                session.get("https://mev.sfs.md/", timeout=10)
+                session.get("https://mev.sfs.md/", timeout=5)
                 # Update referer for the next request
                 session.headers["Referer"] = "https://mev.sfs.md/"
                 session.headers["Sec-Fetch-Site"] = "same-origin"
             except Exception:
                 pass
 
-            resp = session.get(url, timeout=30)
+            resp = session.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.text
             logger.warning("curl_cffi GET %s impersonate=%s response_code=%s", url, imp, resp.status_code)
@@ -73,7 +74,7 @@ def get_html(url: str, logger) -> str | None:
     # Fallback to cloudscraper
     try:
         scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url, headers=headers, timeout=30)
+        resp = scraper.get(url, headers=headers, timeout=10)
         if resp.status_code == 200:
             return resp.text
         logger.warning("cloudscraper GET %s response_code=%s", url, resp.status_code)
@@ -92,11 +93,12 @@ def get_html(url: str, logger) -> str | None:
             session.proxies = {"http": proxy_url, "https": proxy_url}
             session.headers.update(headers)
             
-            resp = session.get(url, timeout=30)
+            resp = session.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.text
             logger.warning("proxy %s GET %s response_code=%s", proxy, url, resp.status_code)
         except Exception as e:
+            logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
             
     return None
