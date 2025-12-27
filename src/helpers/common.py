@@ -20,47 +20,50 @@ def split_list(lst, delimiter) -> list[list]:
 
 
 def get_proxies(logger) -> list[str]:
-    try:
-        # Fetch a list of free proxies
-        resp = requests.get("https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", timeout=3)
-        if resp.status_code == 200:
-            proxies = resp.text.strip().split("\n")
-            if proxies:
-                return random.sample(proxies, min(len(proxies), 3))
-    except Exception as e:
-        logger.warning(f"Failed to fetch proxies: {e}")
+    proxies = []
+    sources = [
+        "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+        "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+        "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt"
+    ]
+    
+    for source in sources:
+        try:
+            resp = requests.get(source, timeout=3)
+            if resp.status_code == 200:
+                lines = resp.text.strip().split("\n")
+                proxies.extend([line.strip() for line in lines if ":" in line])
+        except Exception as e:
+            logger.warning(f"Failed to fetch proxies from {source}: {e}")
+
+    if proxies:
+        # Remove duplicates and pick random ones
+        proxies = list(set(proxies))
+        return random.sample(proxies, min(len(proxies), 5))
     return []
 
 
 def get_html(url: str, logger) -> str | None:
-    # Common headers to mimic a real browser
-    headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    # Only set language, let curl_cffi handle the rest to match the fingerprint
+    extra_headers = {
         "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
-        "Cache-Control": "max-age=0",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
     }
+
     # Try different impersonations to bypass protections
-    impersonations = ["chrome120", "safari15_3"]
+    impersonations = ["chrome120", "chrome110", "safari15_3"]
     
     # First try with curl_cffi
     for imp in impersonations:
         try:
             # Use curl_cffi to bypass Cloudflare
             session = requests.Session(impersonate=imp)
-            session.headers.update(headers)
+            session.headers.update(extra_headers)
             
             # Visit root first to establish session/cookies
             try:
                 session.get("https://mev.sfs.md/", timeout=5)
                 # Update referer for the next request
                 session.headers["Referer"] = "https://mev.sfs.md/"
-                session.headers["Sec-Fetch-Site"] = "same-origin"
             except Exception:
                 pass
 
@@ -74,7 +77,7 @@ def get_html(url: str, logger) -> str | None:
     # Fallback to cloudscraper
     try:
         scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url, headers=headers, timeout=10)
+        resp = scraper.get(url, headers=extra_headers, timeout=10)
         if resp.status_code == 200:
             return resp.text
         logger.warning("cloudscraper GET %s response_code=%s", url, resp.status_code)
@@ -91,14 +94,13 @@ def get_html(url: str, logger) -> str | None:
             # Use chrome120 with proxy
             session = requests.Session(impersonate="chrome120")
             session.proxies = {"http": proxy_url, "https": proxy_url}
-            session.headers.update(headers)
+            session.headers.update(extra_headers)
             
             resp = session.get(url, timeout=10)
             if resp.status_code == 200:
                 return resp.text
             logger.warning("proxy %s GET %s response_code=%s", proxy, url, resp.status_code)
         except Exception as e:
-            logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
             
     return None
