@@ -27,6 +27,12 @@ jobs:
           curl -sL https://appwrite.io/cli/install.sh | bash
           appwrite -v
 
+      - name: Configure Appwrite CLI
+        run: |
+          appwrite client --endpoint ${{ secrets.APPWRITE_ENDPOINT }} --project-id ${{ secrets.APPWRITE_PROJECT_ID }} --key ${{ secrets.APPWRITE_API_KEY }}
+          # Create appwrite.json to satisfy project context requirement
+          echo "{\"projectId\":\"${{ secrets.APPWRITE_PROJECT_ID }}\",\"projectName\":\"receipt-parser\"}" > appwrite.json
+
       - name: Deploy Function
         run: |
           appwrite functions create-deployment \
@@ -34,7 +40,3 @@ jobs:
             --activate true \
             --entrypoint main.py \
             --code appwrite_functions/parse_from_url
-        env:
-          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
-          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
