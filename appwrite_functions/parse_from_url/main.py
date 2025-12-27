@@ -28,10 +28,15 @@ def main(context):
         return context.res.send("Method not allowed", 405)
 
     try:
-        body = json.loads(context.req.body)
+        if isinstance(context.req.body, str):
+            body = json.loads(context.req.body)
+        else:
+            body = context.req.body
+
         url = body.get("url")
         user_id = body.get("user_id")
     except Exception as e:
+        logger.error(f"Error parsing body: {e}")
         return context.res.json({"msg": "Invalid JSON body"}, 400)
 
     status, response = parse_from_url_handler(url, user_id, logger)
