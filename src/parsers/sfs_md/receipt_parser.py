@@ -90,8 +90,8 @@ class SfsMdReceiptParser(ReceiptParserBase):
                     )
 
         session.use_table(TableName.RECEIPT)
-        session.create_or_update_one(self.receipt.to_dict())
-        self.logger.info(self.receipt.to_dict())
+        session.create_or_update_one(self.receipt.model_dump(mode="json"))
+        self.logger.info(self.receipt.model_dump())
         return self.receipt
 
     @staticmethod

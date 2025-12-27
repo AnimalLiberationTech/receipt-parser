@@ -1,6 +1,8 @@
 from unittest import TestCase
 from uuid import UUID
 
+from pydantic_core._pydantic_core import ValidationError  # noqa
+
 from src.schemas.common import CountryCode, OsmType
 from src.schemas.osm_object import OsmObject
 from src.schemas.shop import Shop
@@ -8,31 +10,29 @@ from src.schemas.shop import Shop
 
 class TestShop(TestCase):
     def setUp(self):
-        self.country_code = CountryCode.MOLDOVA
-        self.company_id = "company_id"
-        self.shop_address = "shop_address"
-        self.osm_object = OsmObject(
-            OsmType.NODE, 123, "7.0", "28.0", "display_name", {"street": "Sezame Street"}
-        )
+        self.osm_object = OsmObject(type=OsmType.NODE, key=123, lat="7.0", lon="28.0")
 
-    def test_init_shop(self):
+    def test_auto_generated_fields(self):
         shop = Shop(
-            None, self.country_code, self.company_id, self.shop_address, self.osm_object
-        )
-        self.assertIsInstance(shop, Shop)
-
-    def test_id_not_uuid(self):
-        with self.assertRaises(ValueError):
-            Shop(
-                "not_uuid",
-                self.country_code,
-                self.company_id,
-                self.shop_address,
-                self.osm_object,
-            )
-
-    def test_id_auto_generated(self):
-        shop = Shop(
-            None, self.country_code, self.company_id, self.shop_address, self.osm_object
+            country_code=CountryCode.MOLDOVA,
+            company_id="company_id",
+            shop_address="shop_address",
+            osm_object=self.osm_object,
         )
         self.assertIsInstance(shop.id, UUID)
+
+    def test_wrong_types(self):
+        with self.assertRaises(ValidationError) as ctx:
+            Shop(
+                id="not_uuid",
+                country_code="md",
+                company_id="company_id",
+                shop_address="shop_address",
+                osm_object=self.osm_object,
+            )
+        errors = ctx.exception.errors()
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(errors[0]["loc"], ("id",))
+        self.assertEqual(errors[0]["msg"], "Input should be an instance of UUID")
+        self.assertEqual(errors[1]["loc"], ("country_code",))
+        self.assertEqual(errors[1]["msg"], "Input should be an instance of CountryCode")

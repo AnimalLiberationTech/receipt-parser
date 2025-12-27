@@ -26,5 +26,5 @@ def parse_from_url_handler(url: str, user_id: str, logger) -> (HTTPStatus, dict)
 
     return HTTPStatus.OK, {
         "msg": "Receipt successfully processed",
-        "data": receipt.to_dict(),
+        "data": receipt.model_dump(mode="json"),
     }

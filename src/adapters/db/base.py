@@ -27,7 +27,7 @@ class BaseDBAdapter(ABC):
         pass
 
     @abstractmethod
-    def read_one(self, _id: str, **kwargs) -> Dict[str, Any]:
+    def read_one(self, _id: str, **kwargs) -> Dict[str, Any] | None:
         pass
 
     @abstractmethod

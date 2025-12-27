@@ -1,0 +1,39 @@
+name: Deploy Appwrite Function
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'appwrite_functions/parse_from_url/**'
+      - '.github/workflows/deploy-appwrite.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Prepare Build Context
+        run: |
+          # Copy src directory to the function folder
+          cp -r src appwrite_functions/parse_from_url/
+
+      - name: Install Appwrite CLI
+        run: |
+          curl -sL https://appwrite.io/cli/install.sh | bash
+          appwrite -v
+
+      - name: Deploy Function
+        run: |
+          appwrite functions createDeployment \
+            --functionId ${{ secrets.APPWRITE_FUNCTION_ID }} \
+            --activate true \
+            --entrypoint main.py \
+            --code appwrite_functions/parse_from_url
+        env:
+          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}

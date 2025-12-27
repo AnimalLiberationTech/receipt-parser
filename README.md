@@ -39,7 +39,7 @@ Run `python -m unittest discover -s src/tests/unit`
     - `TEST_COSMOS_DB_ACCOUNT_HOST=https://{Cosmos-DB-account-name}.documents.azure.com:443/`
     - `TEST_COSMOS_DB_ACCOUNT_KEY={key}`
     - `TEST_COSMOS_DB_DATABASE_ID=PlanteTest`
-    - `APP_HOST=https://plante-receipt-parser-test.azurewebsites.net/api`
+    - `WEBSITE_HOSTNAME=plante-receipts-test.azurewebsites.net`
 2. Deploy service to test environment `func azure functionapp publish plante-receipt-parser-test`
    1. If the service was never deployed before, add these values to Function App Configuration:
       - `TEST_COSMOS_DB_ACCOUNT_HOST=https://{Cosmos-DB-account-name}.documents.azure.com:443/`

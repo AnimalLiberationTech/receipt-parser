@@ -4,7 +4,7 @@ from uuid import UUID
 
 from src.handlers.link_shop import link_shop_handler
 from src.helpers.osm import OSM_HOST
-from src.schemas.common import OsmType
+from src.schemas.common import OsmType, CountryCode
 from src.tests import USER_ID_1, SHOP_ID_1
 
 
@@ -86,7 +86,7 @@ class TestLinkShopHandler(TestCase):
         mock_session = MagicMock()
         mock_init_db_session.return_value = mock_session
         mock_session.read_one.return_value = {
-            "country_code": "MD",
+            "country_code": CountryCode.MOLDOVA,
             "company_id": "company_id",
             "shop_address": "shop_address",
         }
@@ -95,10 +95,10 @@ class TestLinkShopHandler(TestCase):
         mock_session.update_one.return_value = True
         mock_parse_osm_url.return_value = (OsmType.WAY, "123")
         mock_lookup_osm_object.return_value = {
-            "lat": 0,
-            "lon": 0,
+            "lat": "10.2",
+            "lon": "20.1",
             "display_name": "display_name",
-            "address": "address",
+            "address": {"city": "city", "country": "country"},
         }
 
         status, body = link_shop_handler(

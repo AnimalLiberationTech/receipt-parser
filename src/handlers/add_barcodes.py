@@ -20,7 +20,7 @@ def add_barcodes_handler(shop_id: str, items: list[dict], logger) -> (HTTPStatus
                 name="_".join(item["purchase_id"].split("_")[:-1]),
                 status=ItemBarcodeStatus(item["status"]),
                 barcode=item.get("barcode"),
-            ).to_dict()
+            ).model_dump(mode="json")
             session.create_or_update_one(item)
         except ValueError as e:
             invalid_items.append({"name": item["name"], "error": str(e)})

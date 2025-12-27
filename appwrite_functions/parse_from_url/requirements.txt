@@ -1,0 +1,5 @@
+azure-cosmos==4.3.1
+curl-cffi==0.14.0
+cloudscraper==1.2.71
+pydantic>=2.0.0
+requests

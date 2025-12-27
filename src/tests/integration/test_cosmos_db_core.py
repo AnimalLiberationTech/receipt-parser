@@ -22,11 +22,11 @@ class TestCosmosDBCoreAdapter(TestCase):
         )
 
     def test_create_one(self):
-        created_receipt_id = self.session.create_one(LIN_RECEIPT.to_dict())
+        created_receipt_id = self.session.create_one(LIN_RECEIPT.model_dump(mode="json"))
         assert created_receipt_id == LIN_RECEIPT.id
 
     def test_read_one(self):
-        created_receipt_id = self.session.create_one(LIN_RECEIPT.to_dict())
+        created_receipt_id = self.session.create_one(LIN_RECEIPT.model_dump(mode="json"))
         receipt: dict = self.session.read_one(created_receipt_id, partition_key=USER_ID_1)
         assert receipt["id"] == LIN_RECEIPT.id
         assert receipt["date"] == LIN_RECEIPT.date.isoformat()
@@ -42,16 +42,18 @@ class TestCosmosDBCoreAdapter(TestCase):
         assert len(receipt["purchases"]) == len(LIN_RECEIPT.purchases)
 
     def test_read_all(self):
-        created_receipt_id_1 = self.session.create_one(LIN_RECEIPT.to_dict())
-        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.to_dict())
+        created_receipt_id_1 = self.session.create_one(
+            LIN_RECEIPT.model_dump(mode="json")
+        )
+        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.model_dump(mode="json"))
         receipts = self.session.read_many(partition_key=USER_ID_1)
         assert len(receipts) == 2
         assert receipts[0]["id"] == created_receipt_id_1 == LIN_RECEIPT.id
         assert receipts[1]["id"] == created_receipt_id_2 == KL_RECEIPT.id
 
     def test_read_many_where(self):
-        self.session.create_one(LIN_RECEIPT.to_dict())
-        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.to_dict())
+        self.session.create_one(LIN_RECEIPT.model_dump(mode="json"))
+        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.model_dump(mode="json"))
         receipts = self.session.read_many(
             {"company_id": KL_RECEIPT.company_id}, partition_key=USER_ID_1
         )
@@ -60,7 +62,7 @@ class TestCosmosDBCoreAdapter(TestCase):
 
     def test_update_one(self):
         total_amount = LIN_RECEIPT.total_amount
-        receipt = LIN_RECEIPT.to_dict()
+        receipt = LIN_RECEIPT.model_dump(mode="json")
         self.session.create_one(receipt)
         receipt["total_amount"] = total_amount + 100
         self.session.update_one(LIN_RECEIPT.id, receipt)
@@ -68,8 +70,10 @@ class TestCosmosDBCoreAdapter(TestCase):
         assert receipt["total_amount"] == total_amount + 100
 
     def test_delete_one(self):
-        created_receipt_id_1 = self.session.create_one(LIN_RECEIPT.to_dict())
-        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.to_dict())
+        created_receipt_id_1 = self.session.create_one(
+            LIN_RECEIPT.model_dump(mode="json")
+        )
+        created_receipt_id_2 = self.session.create_one(KL_RECEIPT.model_dump(mode="json"))
         receipts = self.session.read_many(partition_key=USER_ID_1)
         assert len(receipts) == 2
         self.session.delete_one(created_receipt_id_1, partition_key=USER_ID_1)

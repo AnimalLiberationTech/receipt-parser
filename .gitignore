@@ -91,13 +91,9 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
+# python venv
 .venv
-env/
 venv/
-ENV/
-env.bak/
 venv.bak/
 
 # Spyder project settings
@@ -148,3 +144,10 @@ node_modules/
 
 # keys
 .pem
+
+# env variables & secrets
+.env
+env/
+ENV/
+env.bak/
+.google_client_secret.json

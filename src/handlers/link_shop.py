@@ -39,20 +39,19 @@ def link_shop_handler(
             return HTTPStatus.BAD_REQUEST, {"msg": "Failed to get OSM shop details"}
 
         osm_shop = OsmObject(
-            OsmType(osm_type),
-            int(osm_key),
-            osm_shop_data["lat"],
-            osm_shop_data["lon"],
-            osm_shop_data["display_name"],
-            osm_shop_data["address"],
+            type=OsmType(osm_type),
+            key=int(osm_key),
+            lat=osm_shop_data["lat"],
+            lon=osm_shop_data["lon"],
+            display_name=osm_shop_data["display_name"],
+            address=osm_shop_data["address"],
         )
         shop = Shop(
-            id=None,
             country_code=receipt["country_code"],
             company_id=receipt["company_id"],
             shop_address=receipt["shop_address"],
             osm_object=osm_shop,
-        ).to_dict()
+        ).model_dump(mode="json")
         session.use_table(TableName.SHOP)
         session.create_one(shop)
 

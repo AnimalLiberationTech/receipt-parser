@@ -1,4 +1,3 @@
-import json
 import os
 from abc import ABC
 from typing import Self, Dict, Any
@@ -34,25 +33,20 @@ class CosmosDBCoreAdapter(BaseDBAdapter, ABC):
 
     def create_one(self, data: Dict[str, Any]) -> str:
         try:
-            item = self.container.create_item(data)
-            return item["id"]
+            return self.container.create_item(data)["id"]
         except exceptions.CosmosResourceExistsError:
             return data["id"]
 
-    def create_or_update_one(self, data: Dict[str, Any]) -> bool:
-        try:
-            self.logger.info(json.dumps(data, indent=2))
-            response = self.container.upsert_item(data)
-            return bool(response["_ts"])
-        except exceptions.CosmosHttpResponseError as e:
-            self.logger.info(str(e))
-            return False
+    def create_or_update_one(self, data: Dict[str, Any]) -> str:
+        return self.container.upsert_item(data)["id"]
 
-    def read_one(self, _id: str, **kwargs) -> Dict[str, Any]:
-        partition_key = kwargs.get("partition_key")
-        if partition_key is None:
-            raise ValueError("partition_key is required")
-        return self.container.read_item(_id, partition_key)
+    def read_one(self, _id: str, **kwargs) -> Dict[str, Any] | None:
+        try:
+            return self.container.read_item(_id, kwargs["partition_key"])
+        except KeyError:
+            raise KeyError("missing argument: 'partition_key'")
+        except exceptions.CosmosResourceNotFoundError:
+            return None
 
     def read_many(
         self, where: dict[str, str | tuple] | None = None, limit=10, **kwargs

@@ -1,3 +1,22 @@
+[project]
+name = ""
+version = "0.0.1"
+requires-python = "~=3.12"
+dependencies = [
+    "azure-core",
+    "azure-cosmos~=4.3.1",
+    "azure-functions",
+    "azure-monitor-opentelemetry",
+    "cachecontrol",
+    "cloudscraper>=1.2.71",
+    "coverage",
+    "curl-cffi>=0.14.0",
+    "google-auth-oauthlib",
+    "jinja2==3.1.6",
+    "pydantic[email]",
+    "six>=1.17.0",
+]
+
 [tool.black]
 line-length = 90
 include = '\.pyi?$'
@@ -18,3 +37,13 @@ exclude = '''
   )/
 )
 '''
+
+[dependency-groups]
+dev = ["black"]
+
+[tool.uv]
+package = false
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"

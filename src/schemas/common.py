@@ -3,6 +3,7 @@ from enum import StrEnum, Enum
 
 class EnvType(StrEnum):
     PROD = "prod"
+    STAGE = "stage"
     DEV = "dev"
     TEST = "test"
 
@@ -11,12 +12,18 @@ class TableName(StrEnum):
     RECEIPT = "receipt"
     SHOP = "shop"
     SHOP_ITEM = "shop_item"
+    USER = "user"
+    USER_IDENTITY = "user_identity"
+    USER_SESSION = "user_session"
 
 
 class TablePartitionKey(StrEnum):
     RECEIPT = "user_id"
     SHOP = "country_code"
     SHOP_ITEM = "shop_id"
+    USER = "banned"
+    USER_IDENTITY = "provider"
+    USER_SESSION = "identity_provider"
 
 
 class CountryCode(StrEnum):
