@@ -22,10 +22,9 @@ def get_html(url: str, logger) -> str | None:
     # Common headers to mimic a real browser
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Accept-Language": "en-US,en;q=0.9,ro;q=0.8,ru;q=0.7",
+        "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
         "Cache-Control": "max-age=0",
         "Connection": "keep-alive",
-        "Referer": "https://mev.sfs.md/",
         "Upgrade-Insecure-Requests": "1",
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
@@ -40,7 +39,19 @@ def get_html(url: str, logger) -> str | None:
     for imp in impersonations:
         try:
             # Use curl_cffi to bypass Cloudflare
-            resp = requests.get(url, impersonate=imp, headers=headers, timeout=30)
+            session = requests.Session(impersonate=imp)
+            session.headers.update(headers)
+            
+            # Visit root first to establish session/cookies
+            try:
+                session.get("https://mev.sfs.md/", timeout=10)
+                # Update referer for the next request
+                session.headers["Referer"] = "https://mev.sfs.md/"
+                session.headers["Sec-Fetch-Site"] = "same-origin"
+            except Exception:
+                pass
+
+            resp = session.get(url, timeout=30)
             if resp.status_code == 200:
                 return resp.text
             logger.warning("curl_cffi GET %s impersonate=%s response_code=%s", url, imp, resp.status_code)
