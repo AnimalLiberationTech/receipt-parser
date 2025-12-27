@@ -1,6 +1,7 @@
 name: Deploy Appwrite Function
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
