@@ -6,7 +6,7 @@ We begin by addressing the more accessible digital receipts, before progressing 
 
 
 ## Running the service locally
-1. Install Python 3.11
+1. Install Python 3.12
 2. Install [Pipenv](https://pipenv.pypa.io/en/latest/)
 3. Run `export PIPENV_VENV_IN_PROJECT=1 && pipenv sync --dev`
 4. Run `pipenv shell`
