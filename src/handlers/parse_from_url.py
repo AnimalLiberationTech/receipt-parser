@@ -22,7 +22,13 @@ def parse_from_url_handler(url: str, user_id: str, logger) -> (HTTPStatus, dict)
     if not receipt_html:
         return HTTPStatus.BAD_REQUEST, {"msg": "Failed to fetch receipt"}
 
-    receipt = parser.parse_html(receipt_html).build_receipt(user_id).persist()
+    try:
+        receipt = parser.parse_html(receipt_html).build_receipt(user_id).persist()
+    except ValueError as e:
+        return HTTPStatus.BAD_REQUEST, {"msg": str(e)}
+    except Exception as e:
+        logger.error(f"Unexpected error parsing receipt: {e}")
+        return HTTPStatus.INTERNAL_SERVER_ERROR, {"msg": "Internal server error"}
 
     return HTTPStatus.OK, {
         "msg": "Receipt successfully processed",

@@ -36,12 +36,6 @@ def get_html(url: str, logger) -> str | None:
         logger.warning("GET %s failed: %s", url, e)
 
     try:
-        payload = {
-            "source": "universal",
-            "url": url,
-            "render": "html",
-        }
-
         api_user = os.environ.get("OXYLABS_API_USER")
         api_pass = os.environ.get("OXYLABS_API_PASS")
 
@@ -53,7 +47,7 @@ def get_html(url: str, logger) -> str | None:
             "POST",
             "https://realtime.oxylabs.io/v1/queries",
             auth=(api_user, api_pass),
-            json=payload,
+            json={"source": "universal", "url": url},
             timeout=30,
         )
 

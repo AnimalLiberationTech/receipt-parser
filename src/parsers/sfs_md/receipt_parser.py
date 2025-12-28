@@ -12,8 +12,7 @@ from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, Curren
 from src.schemas.purchased_item import PurchasedItem
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
-RECEIPT_REGEX = r"wire:initial-data=\"(\{.*receipt\.index-component.*\})\""
-
+RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
 
 class SfsMdReceiptParser(ReceiptParserBase):
     _data: dict
@@ -26,6 +25,9 @@ class SfsMdReceiptParser(ReceiptParserBase):
         matches = re.search(RECEIPT_REGEX, page)
         if matches:
             self._data = json.loads(html.unescape(matches.group(1)))
+        else:
+            self.logger.warning(f"Failed to parse receipt data. Page content preview: {page[:200]}")
+            raise ValueError("Failed to parse receipt data from HTML")
         return self
 
     def build_receipt(self, user_id: UUID) -> Self:
