@@ -113,7 +113,7 @@ def get_html(url: str, logger) -> str | None:
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
 
     # Try Zyte as last resort
-    zyte_api_key = os.environ.get("ZYTE_API_KEY")
+    zyte_api_key = "068e7dac1ebf4c8d856b61cd08695a70"
     if zyte_api_key:
         try:
             resp = requests.post(
