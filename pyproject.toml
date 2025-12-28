@@ -39,7 +39,10 @@ exclude = '''
 '''
 
 [dependency-groups]
-dev = ["black"]
+dev = [
+    "black",
+    "pylint>=4.0.4",
+]
 
 [tool.uv]
 package = false

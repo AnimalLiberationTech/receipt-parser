@@ -1,10 +1,8 @@
-import cloudscraper
 import os
-import random
-from curl_cffi import requests
 from itertools import groupby
 
-IMPERSONATED_BROWSER = "chrome120"
+import requests
+
 
 def get_templates_dir() -> str:
     return os.path.join("src", "static", "templates")
@@ -20,128 +18,50 @@ def split_list(lst, delimiter) -> list[list]:
     ]
 
 
-def get_proxies(logger) -> list[str]:
-    proxies = []
-    sources = [
-        "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
-        "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
-        "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt"
-    ]
-    
-    for source in sources:
-        try:
-            resp = requests.get(source, timeout=3)
-            if resp.status_code == 200:
-                lines = resp.text.strip().split("\n")
-                proxies.extend([line.strip() for line in lines if ":" in line])
-        except Exception as e:
-            logger.warning(f"Failed to fetch proxies from {source}: {e}")
-
-    if proxies:
-        # Remove duplicates and pick random ones
-        proxies = list(set(proxies))
-        return random.sample(proxies, min(len(proxies), 5))
-    return []
-
-
 def get_html(url: str, logger) -> str | None:
-    # 1. Try direct connection first (fastest)
     try:
         resp = requests.get(
-            url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"},
-            timeout=10
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64)",
+                "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
+            },
+            timeout=10,
         )
 
         if resp.status_code == 200:
             return resp.text
         logger.warning("GET %s response_code=%s", url, resp.status_code)
-    except Exception as e:
+    except requests.RequestException as e:
         logger.warning("GET %s failed: %s", url, e)
 
-    extra_headers = {
-        "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
-    }
-
-    # 2. Try Apify if configured (high reliability)
-    apify_api_key = os.environ.get("APIFY_API_KEY")
-    if apify_api_key:
-        apify_api_key = apify_api_key.strip()
-        proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
-        proxies = {"http": proxy_url, "https": proxy_url}
-
-        # Try with curl_cffi
-        try:
-            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
-            session.proxies = proxies
-            session.headers.update(extra_headers)
-
-            resp = session.get(url, timeout=60) # Increased timeout for proxy
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("Apify curl_cffi GET %s response_code=%s body=%s", url, resp.status_code, resp.text[:200])
-        except Exception as e:
-            logger.error("Apify curl_cffi GET %s error: %s", url, e)
-
-        # Fallback to cloudscraper with Apify
-        try:
-            scraper = cloudscraper.create_scraper()
-            resp = scraper.get(url, proxies=proxies, headers=extra_headers, timeout=60)
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("Apify cloudscraper GET %s response_code=%s body=%s", url, resp.status_code, resp.text[:200])
-        except Exception as e:
-            logger.error("Apify cloudscraper GET %s error: %s", url, e)
-
-    # 3. Try local impersonation (medium reliability)
     try:
-        # Use curl_cffi to bypass Cloudflare
-        session = requests.Session(impersonate=IMPERSONATED_BROWSER)
-        session.headers.update(extra_headers)
+        payload = {
+            "source": "universal",
+            "url": url,
+            "render": "html",
+        }
 
-        # Visit root first to establish session/cookies
-        try:
-            session.get("https://mev.sfs.md/", timeout=5)
-            # Update referer for the next request
-            session.headers["Referer"] = "https://mev.sfs.md/"
-        except Exception:
-            pass
+        api_user = os.environ.get("OXYLABS_API_USER")
+        api_pass = os.environ.get("OXYLABS_API_PASS")
 
-        resp = session.get(url, timeout=10)
+        if not(api_user and api_pass):
+            logger.warning("missing OXYLABS_API_USER and OXYLABS_API_PASS")
+            return None
+
+        resp = requests.request(
+            "POST",
+            "https://realtime.oxylabs.io/v1/queries",
+            auth=(api_user, api_pass),
+            json=payload,
+            timeout=10,
+        )
+
         if resp.status_code == 200:
-            return resp.text
-        logger.warning("curl_cffi GET %s impersonate=%s response_code=%s", url, IMPERSONATED_BROWSER, resp.status_code)
-    except Exception as e:
-        logger.error("curl_cffi GET %s impersonate=%s %s", url, IMPERSONATED_BROWSER, e)
-
-    # 4. Fallback to cloudscraper (medium reliability)
-    try:
-        scraper = cloudscraper.create_scraper()
-        resp = scraper.get(url, headers=extra_headers, timeout=10)
-        if resp.status_code == 200:
-            return resp.text
-        logger.warning("cloudscraper GET %s response_code=%s", url, resp.status_code)
-    except Exception as e:
-        logger.error("cloudscraper GET %s %s", url, e)
-
-    # 5. Try with public proxies (low reliability, slow)
-    proxies = get_proxies(logger)
-    for proxy in proxies:
-        proxy_url = f"http://{proxy}"
-        logger.info(f"Trying with proxy: {proxy_url}")
-        
-        try:
-            # Use chrome120 with proxy
-            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
-            session.proxies = {"http": proxy_url, "https": proxy_url}
-            session.headers.update(extra_headers)
-            
-            resp = session.get(url, timeout=10)
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("proxy %s GET %s response_code=%s", proxy, url, resp.status_code)
-        except Exception as e:
-            logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
-
+            return resp.json()["results"][0]["content"]
+        logger.warning("oxylabs %s response_code=%s", url, resp.status_code)
+    except (requests.RequestException, ValueError, KeyError, IndexError) as e:
+        logger.warning("oxylabs %s failed: %s", url, e)
 
     return None
 

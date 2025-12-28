@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.handlers.parse_from_url import parse_from_url_handler
 
+
 class AppwriteLogger:
     def __init__(self, context):
         self.context = context
@@ -20,9 +21,10 @@ class AppwriteLogger:
     def error(self, msg, *args):
         self.context.error(str(msg) % args if args else str(msg))
 
+
 def main(context):
     logger = AppwriteLogger(context)
-    
+
     if context.req.method != "POST":
         return context.res.send("Method not allowed", 405)
 
@@ -39,5 +41,5 @@ def main(context):
         return context.res.json({"msg": "Invalid JSON body"}, 400)
 
     status, response = parse_from_url_handler(url, user_id, logger)
-    
+
     return context.res.json(response, status.value)

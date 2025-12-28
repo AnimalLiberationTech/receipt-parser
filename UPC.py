@@ -27,7 +27,7 @@ class Barcode:
             )
         if not validate_upc(self.code):
             raise ValueError("invalid barcode")
-        
+
     def __repr__(self):
         return str(self.code)
 
@@ -41,7 +41,7 @@ def validate_upc(code) -> bool:
 
     except ValueError:
         return False
-    
+
     except IndexError:
         return False
 

@@ -9,7 +9,9 @@ from src.schemas.common import EnvType, TableName, TablePartitionKey
 def migrate_db():
     parser = argparse.ArgumentParser(description="Migrate CosmosDB database and tables")
     parser.add_argument("--env", type=str, help="[prod, dev, test]")
-    parser.add_argument("--appinsights", type=str, help="Azure application insights connection string")
+    parser.add_argument(
+        "--appinsights", type=str, help="Azure application insights connection string"
+    )
 
     args = parser.parse_args()
     try:
