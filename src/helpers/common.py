@@ -114,18 +114,32 @@ def get_html(url: str, logger) -> str | None:
     # Try Apify as last resort
     apify_api_key = os.environ.get("APIFY_API_KEY")
     if apify_api_key:
+        apify_api_key = apify_api_key.strip()
+        proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
+        proxies = {"http": proxy_url, "https": proxy_url}
+
+        # Try with curl_cffi
         try:
-            proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
             session = requests.Session(impersonate=IMPERSONATED_BROWSER)
-            session.proxies = {"http": proxy_url, "https": proxy_url}
+            session.proxies = proxies
             session.headers.update(extra_headers)
 
             resp = session.get(url, timeout=30)
             if resp.status_code == 200:
                 return resp.text
-            logger.warning("Apify GET %s response_code=%s", url, resp.status_code)
+            logger.warning("Apify curl_cffi GET %s response_code=%s", url, resp.status_code)
         except Exception as e:
-            logger.error("Apify GET %s error: %s", url, e)
+            logger.error("Apify curl_cffi GET %s error: %s", url, e)
+
+        # Fallback to cloudscraper with Apify
+        try:
+            scraper = cloudscraper.create_scraper()
+            resp = scraper.get(url, proxies=proxies, headers=extra_headers, timeout=30)
+            if resp.status_code == 200:
+                return resp.text
+            logger.warning("Apify cloudscraper GET %s response_code=%s", url, resp.status_code)
+        except Exception as e:
+            logger.error("Apify cloudscraper GET %s error: %s", url, e)
 
     return None
 
