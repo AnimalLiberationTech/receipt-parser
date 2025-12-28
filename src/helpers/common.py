@@ -1,9 +1,11 @@
+import cloudscraper
 import os
 import random
-import cloudscraper
+from base64 import b64decode
 from curl_cffi import requests
 from itertools import groupby
 
+IMPERSONATED_BROWSER = "chrome120"
 
 def get_templates_dir() -> str:
     return os.path.join("src", "static", "templates")
@@ -44,45 +46,42 @@ def get_proxies(logger) -> list[str]:
 
 
 def get_html(url: str, logger) -> str | None:
-    resp = requests.get(
-        url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
-    )
+    try:
+        resp = requests.get(
+            url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"},
+            timeout=10
+        )
 
-    if resp.status_code == 200:
-        return resp.text
-    logger.warning("GET %s response_code=%s", url, resp.status_code)
-    return None
-
+        if resp.status_code == 200:
+            return resp.text
+        logger.warning("GET %s response_code=%s", url, resp.status_code)
+    except Exception as e:
+        logger.warning("GET %s failed: %s", url, e)
 
     # Only set language, let curl_cffi handle the rest to match the fingerprint
     extra_headers = {
         "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
     }
 
-    # Try different impersonations to bypass protections
-    impersonations = ["chrome120", "chrome110", "safari15_3"]
-    
-    # First try with curl_cffi
-    for imp in impersonations:
-        try:
-            # Use curl_cffi to bypass Cloudflare
-            session = requests.Session(impersonate=imp)
-            session.headers.update(extra_headers)
-            
-            # Visit root first to establish session/cookies
-            try:
-                session.get("https://mev.sfs.md/", timeout=5)
-                # Update referer for the next request
-                session.headers["Referer"] = "https://mev.sfs.md/"
-            except Exception:
-                pass
+    try:
+        # Use curl_cffi to bypass Cloudflare
+        session = requests.Session(impersonate=IMPERSONATED_BROWSER)
+        session.headers.update(extra_headers)
 
-            resp = session.get(url, timeout=10)
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("curl_cffi GET %s impersonate=%s response_code=%s", url, imp, resp.status_code)
-        except Exception as e:
-            logger.error("curl_cffi GET %s impersonate=%s %s", url, imp, e)
+        # Visit root first to establish session/cookies
+        try:
+            session.get("https://mev.sfs.md/", timeout=5)
+            # Update referer for the next request
+            session.headers["Referer"] = "https://mev.sfs.md/"
+        except Exception:
+            pass
+
+        resp = session.get(url, timeout=10)
+        if resp.status_code == 200:
+            return resp.text
+        logger.warning("curl_cffi GET %s impersonate=%s response_code=%s", url, IMPERSONATED_BROWSER, resp.status_code)
+    except Exception as e:
+        logger.error("curl_cffi GET %s impersonate=%s %s", url, IMPERSONATED_BROWSER, e)
 
     # Fallback to cloudscraper
     try:
@@ -102,7 +101,7 @@ def get_html(url: str, logger) -> str | None:
         
         try:
             # Use chrome120 with proxy
-            session = requests.Session(impersonate="chrome120")
+            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
             session.proxies = {"http": proxy_url, "https": proxy_url}
             session.headers.update(extra_headers)
             
@@ -112,7 +111,26 @@ def get_html(url: str, logger) -> str | None:
             logger.warning("proxy %s GET %s response_code=%s", proxy, url, resp.status_code)
         except Exception as e:
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
-            
+
+    # Try Zyte as last resort
+    zyte_api_key = os.environ.get("ZYTE_API_KEY")
+    if zyte_api_key:
+        try:
+            resp = requests.post(
+                "http://api.zyte.com/v1/extract",
+                auth=(zyte_api_key, ""),
+                json={
+                    "url": url,
+                    "httpResponseBody": True,
+                },
+                timeout=30
+            )
+            if resp.status_code == 200:
+                return b64decode(resp.json()["httpResponseBody"]).decode("utf-8")
+            logger.warning("Zyte GET %s response_code=%s", url, resp.status_code)
+        except Exception as e:
+            logger.error("Zyte GET %s error: %s", url, e)
+
     return None
 
 
