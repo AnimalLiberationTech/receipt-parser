@@ -45,6 +45,7 @@ def get_proxies(logger) -> list[str]:
 
 
 def get_html(url: str, logger) -> str | None:
+    # 1. Try direct connection first (fastest)
     try:
         resp = requests.get(
             url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"},
@@ -57,11 +58,41 @@ def get_html(url: str, logger) -> str | None:
     except Exception as e:
         logger.warning("GET %s failed: %s", url, e)
 
-    # Only set language, let curl_cffi handle the rest to match the fingerprint
     extra_headers = {
         "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
     }
 
+    # 2. Try Apify if configured (high reliability)
+    apify_api_key = os.environ.get("APIFY_API_KEY")
+    if apify_api_key:
+        apify_api_key = apify_api_key.strip()
+        proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
+        proxies = {"http": proxy_url, "https": proxy_url}
+
+        # Try with curl_cffi
+        try:
+            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
+            session.proxies = proxies
+            session.headers.update(extra_headers)
+
+            resp = session.get(url, timeout=60) # Increased timeout for proxy
+            if resp.status_code == 200:
+                return resp.text
+            logger.warning("Apify curl_cffi GET %s response_code=%s body=%s", url, resp.status_code, resp.text[:200])
+        except Exception as e:
+            logger.error("Apify curl_cffi GET %s error: %s", url, e)
+
+        # Fallback to cloudscraper with Apify
+        try:
+            scraper = cloudscraper.create_scraper()
+            resp = scraper.get(url, proxies=proxies, headers=extra_headers, timeout=60)
+            if resp.status_code == 200:
+                return resp.text
+            logger.warning("Apify cloudscraper GET %s response_code=%s body=%s", url, resp.status_code, resp.text[:200])
+        except Exception as e:
+            logger.error("Apify cloudscraper GET %s error: %s", url, e)
+
+    # 3. Try local impersonation (medium reliability)
     try:
         # Use curl_cffi to bypass Cloudflare
         session = requests.Session(impersonate=IMPERSONATED_BROWSER)
@@ -82,7 +113,7 @@ def get_html(url: str, logger) -> str | None:
     except Exception as e:
         logger.error("curl_cffi GET %s impersonate=%s %s", url, IMPERSONATED_BROWSER, e)
 
-    # Fallback to cloudscraper
+    # 4. Fallback to cloudscraper (medium reliability)
     try:
         scraper = cloudscraper.create_scraper()
         resp = scraper.get(url, headers=extra_headers, timeout=10)
@@ -92,7 +123,7 @@ def get_html(url: str, logger) -> str | None:
     except Exception as e:
         logger.error("cloudscraper GET %s %s", url, e)
 
-    # Try with proxies if direct connection fails
+    # 5. Try with public proxies (low reliability, slow)
     proxies = get_proxies(logger)
     for proxy in proxies:
         proxy_url = f"http://{proxy}"
@@ -111,35 +142,6 @@ def get_html(url: str, logger) -> str | None:
         except Exception as e:
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
 
-    # Try Apify as last resort
-    apify_api_key = os.environ.get("APIFY_API_KEY")
-    if apify_api_key:
-        apify_api_key = apify_api_key.strip()
-        proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
-        proxies = {"http": proxy_url, "https": proxy_url}
-
-        # Try with curl_cffi
-        try:
-            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
-            session.proxies = proxies
-            session.headers.update(extra_headers)
-
-            resp = session.get(url, timeout=30)
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("Apify curl_cffi GET %s response_code=%s", url, resp.status_code)
-        except Exception as e:
-            logger.error("Apify curl_cffi GET %s error: %s", url, e)
-
-        # Fallback to cloudscraper with Apify
-        try:
-            scraper = cloudscraper.create_scraper()
-            resp = scraper.get(url, proxies=proxies, headers=extra_headers, timeout=30)
-            if resp.status_code == 200:
-                return resp.text
-            logger.warning("Apify cloudscraper GET %s response_code=%s", url, resp.status_code)
-        except Exception as e:
-            logger.error("Apify cloudscraper GET %s error: %s", url, e)
 
     return None
 
