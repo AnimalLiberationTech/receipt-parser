@@ -54,7 +54,7 @@ def get_html(url: str, logger) -> str | None:
             "https://realtime.oxylabs.io/v1/queries",
             auth=(api_user, api_pass),
             json=payload,
-            timeout=10,
+            timeout=30,
         )
 
         if resp.status_code == 200:
