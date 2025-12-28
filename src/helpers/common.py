@@ -44,6 +44,16 @@ def get_proxies(logger) -> list[str]:
 
 
 def get_html(url: str, logger) -> str | None:
+    resp = requests.get(
+        url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"}
+    )
+
+    if resp.status_code == 200:
+        return resp.text
+    logger.warning("GET %s response_code=%s", url, resp.status_code)
+    return None
+
+
     # Only set language, let curl_cffi handle the rest to match the fingerprint
     extra_headers = {
         "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",

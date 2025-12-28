@@ -1,7 +1,6 @@
+import json
 import os
 import sys
-import json
-from http import HTTPStatus
 
 # Add the current directory to sys.path to allow importing from src
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
