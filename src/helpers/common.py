@@ -26,7 +26,7 @@ def get_html(url: str, logger) -> str | None:
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64)",
                 "Accept-Language": "ro-MD,ro;q=0.9,en-US;q=0.8,en;q=0.7,ru;q=0.6",
             },
-            timeout=10,
+            timeout=5,
         )
 
         if resp.status_code == 200:
@@ -48,7 +48,7 @@ def get_html(url: str, logger) -> str | None:
             "https://realtime.oxylabs.io/v1/queries",
             auth=(api_user, api_pass),
             json={"source": "universal", "url": url},
-            timeout=30,
+            timeout=60,
         )
 
         if resp.status_code == 200:
