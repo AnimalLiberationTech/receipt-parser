@@ -1,7 +1,6 @@
 import cloudscraper
 import os
 import random
-from base64 import b64decode
 from curl_cffi import requests
 from itertools import groupby
 
@@ -112,24 +111,21 @@ def get_html(url: str, logger) -> str | None:
         except Exception as e:
             logger.warning("proxy %s GET %s failed: %s", proxy, url, e)
 
-    # Try Zyte as last resort
-    zyte_api_key = "068e7dac1ebf4c8d856b61cd08695a70"
-    if zyte_api_key:
+    # Try Apify as last resort
+    apify_api_key = os.environ.get("APIFY_API_KEY")
+    if apify_api_key:
         try:
-            resp = requests.post(
-                "http://api.zyte.com/v1/extract",
-                auth=(zyte_api_key, ""),
-                json={
-                    "url": url,
-                    "httpResponseBody": True,
-                },
-                timeout=30
-            )
+            proxy_url = f"http://auto:{apify_api_key}@proxy.apify.com:8000"
+            session = requests.Session(impersonate=IMPERSONATED_BROWSER)
+            session.proxies = {"http": proxy_url, "https": proxy_url}
+            session.headers.update(extra_headers)
+
+            resp = session.get(url, timeout=30)
             if resp.status_code == 200:
-                return b64decode(resp.json()["httpResponseBody"]).decode("utf-8")
-            logger.warning("Zyte GET %s response_code=%s", url, resp.status_code)
+                return resp.text
+            logger.warning("Apify GET %s response_code=%s", url, resp.status_code)
         except Exception as e:
-            logger.error("Zyte GET %s error: %s", url, e)
+            logger.error("Apify GET %s error: %s", url, e)
 
     return None
 
