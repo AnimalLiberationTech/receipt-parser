@@ -22,12 +22,13 @@ def parse_from_url_handler(url: str, user_id: str, logger: Any) -> tuple[HTTPSta
 
     try:
         receipt = parser.get_receipt()
-        logger.info(f"Receipt found in the db")
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error retrieving receipt: {e}")
         return HTTPStatus.INTERNAL_SERVER_ERROR, {"msg": "Error retrieving receipt"}
 
-    if not receipt:
+    if receipt:
+        logger.info(f"Receipt found in the db")
+    else:
         receipt_html = get_html(url, logger)
         if not receipt_html:
             return HTTPStatus.BAD_REQUEST, {"msg": "Failed to fetch receipt"}
