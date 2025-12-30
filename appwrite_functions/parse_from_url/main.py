@@ -2,9 +2,14 @@ import json
 import os
 import sys
 
-# Add the project root directory to sys.path to allow importing from src
-# Go up two levels: parse_from_url -> appwrite_functions -> receipt-parser (root)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+# Add the directory containing this file to sys.path to allow imports from the same directory
+# This is needed when the function is deployed and 'src' is copied next to main.py
+current_dir = os.path.dirname(__file__)
+sys.path.append(current_dir)
+
+# Fallback for local development where 'src' is at the project root (two levels up)
+if not os.path.exists(os.path.join(current_dir, "src")):
+    sys.path.append(os.path.abspath(os.path.join(current_dir, "../../")))
 
 from src.handlers.parse_from_url import parse_from_url_handler
 
