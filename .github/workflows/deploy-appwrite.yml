@@ -21,6 +21,8 @@ jobs:
         run: |
           # Copy src directory to the function folder
           cp -r src appwrite_functions/parse_from_url/
+          # Remove tests from the deployment package
+          rm -rf appwrite_functions/parse_from_url/src/tests
 
       - name: Install Appwrite CLI
         run: |
