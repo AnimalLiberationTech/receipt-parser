@@ -43,8 +43,8 @@ class CosmosDBCoreAdapter(BaseDBAdapter, ABC):
     def read_one(self, _id: str, **kwargs) -> Dict[str, Any] | None:
         try:
             return self.container.read_item(_id, kwargs["partition_key"])
-        except KeyError:
-            raise KeyError("missing argument: 'partition_key'")
+        except KeyError as exc:
+            raise KeyError("missing argument: 'partition_key'") from exc
         except exceptions.CosmosResourceNotFoundError:
             return None
 

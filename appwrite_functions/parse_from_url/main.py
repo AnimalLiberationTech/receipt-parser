@@ -2,8 +2,9 @@ import json
 import os
 import sys
 
-# Add the current directory to sys.path to allow importing from src
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add the project root directory to sys.path to allow importing from src
+# Go up two levels: parse_from_url -> appwrite_functions -> receipt-parser (root)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from src.handlers.parse_from_url import parse_from_url_handler
 
@@ -36,8 +37,8 @@ def main(context):
 
         url = body.get("url")
         user_id = body.get("user_id")
-    except Exception as e:
-        logger.error(f"Error parsing body: {e}")
+    except (json.JSONDecodeError, AttributeError, TypeError) as e:
+        logger.error(f"Error parsing body ({type(e).__name__}): {e}")
         return context.res.json({"msg": "Invalid JSON body"}, 400)
 
     status, response = parse_from_url_handler(url, user_id, logger)

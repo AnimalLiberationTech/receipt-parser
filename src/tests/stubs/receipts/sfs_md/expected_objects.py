@@ -18,6 +18,7 @@ LIN_RECEIPT = SfsMdReceipt(
     key=135932,
     currency_code=CurrencyCode.MOLDOVAN_LEU,
     total_amount=118.04,
+    receipt_url="https://mev.sfs.md/receipt-verifier/J403001576/118.04/135932/2024-01-17",
     purchases=[
         PurchasedItem(
             name="ANGROMIX-77 Lapte din soia 1l",
@@ -59,6 +60,7 @@ KL_RECEIPT = SfsMdReceipt(
     key=25312,
     currency_code=CurrencyCode.MOLDOVAN_LEU,
     total_amount=370.85,
+    receipt_url="https://mev.sfs.md/receipt-verifier/J702003194/370.85/25312/2023-10-17",
     purchases=[
         PurchasedItem(
             name="VDR SALAM BISC.250G",

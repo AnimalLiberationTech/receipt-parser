@@ -10,6 +10,7 @@ class EnvType(StrEnum):
 
 class TableName(StrEnum):
     RECEIPT = "receipt"
+    RECEIPT_URL = "receipt_url"
     SHOP = "shop"
     SHOP_ITEM = "shop_item"
     USER = "user"
@@ -19,6 +20,7 @@ class TableName(StrEnum):
 
 class TablePartitionKey(StrEnum):
     RECEIPT = "user_id"
+    RECEIPT_URL = "country_code"
     SHOP = "country_code"
     SHOP_ITEM = "shop_id"
     USER = "banned"

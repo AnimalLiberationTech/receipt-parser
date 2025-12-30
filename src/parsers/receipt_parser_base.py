@@ -11,13 +11,14 @@ class ReceiptParserBase(ABC):
     hosts: list[str]
     country_code: CountryCode
     currency_code: CurrencyCode
+    user_id: UUID
 
     @abstractmethod
     def parse_html(self, page: str) -> Self:
         pass
 
     @abstractmethod
-    def build_receipt(self, user_id: UUID) -> Self:
+    def build_receipt(self) -> Self:
         pass
 
     @abstractmethod

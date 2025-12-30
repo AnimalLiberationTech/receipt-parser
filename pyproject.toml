@@ -1,16 +1,14 @@
 [project]
-name = ""
+name = "receipt-parser"
 version = "0.0.1"
 requires-python = "~=3.12"
 dependencies = [
     "azure-core",
-    "azure-cosmos~=4.3.1",
+    "azure-cosmos>=4.3.1",
     "azure-functions",
     "azure-monitor-opentelemetry",
     "cachecontrol",
-    "cloudscraper>=1.2.71",
     "coverage",
-    "curl-cffi>=0.14.0",
     "google-auth-oauthlib",
     "jinja2==3.1.6",
     "pydantic[email]",
@@ -42,6 +40,7 @@ exclude = '''
 dev = [
     "black",
     "pylint>=4.0.4",
+    "pytest>=9.0.2",
 ]
 
 [tool.uv]

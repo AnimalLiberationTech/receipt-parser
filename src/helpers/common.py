@@ -1,5 +1,6 @@
 import os
 from itertools import groupby
+import hashlib
 
 import requests
 
@@ -39,7 +40,7 @@ def get_html(url: str, logger) -> str | None:
         api_user = os.environ.get("OXYLABS_API_USER")
         api_pass = os.environ.get("OXYLABS_API_PASS")
 
-        if not(api_user and api_pass):
+        if not (api_user and api_pass):
             logger.warning("missing OXYLABS_API_USER and OXYLABS_API_PASS")
             return None
 
@@ -77,3 +78,7 @@ def is_localhost() -> bool:
         if os.environ["WEBSITE_HOSTNAME"].startswith(local_ip):
             return True
     return False
+
+
+def make_hash(url: str) -> str:
+    return hashlib.md5(url.strip().encode("utf-8")).hexdigest()

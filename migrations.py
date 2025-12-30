@@ -17,10 +17,10 @@ def migrate_db():
     try:
         env = EnvType(args.env.lower())
         app_insights = args.appinsights
-    except AttributeError:
-        raise ValueError("Missing env or appinsights argument")
-    except ValueError:
-        raise ValueError(f"Invalid env: {args.env}")
+    except AttributeError as exc:
+        raise ValueError("Missing env or appinsights argument") from exc
+    except ValueError as exc:
+        raise ValueError(f"Invalid env: {args.env}") from exc
 
     os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"] = app_insights
 
@@ -28,6 +28,7 @@ def migrate_db():
     session.create_db()
     tables = {
         TableName.RECEIPT: TablePartitionKey.RECEIPT,
+        TableName.RECEIPT_URL: TablePartitionKey.RECEIPT_URL,
         TableName.SHOP: TablePartitionKey.SHOP,
         TableName.SHOP_ITEM: TablePartitionKey.SHOP_ITEM,
         TableName.USER: TablePartitionKey.USER,

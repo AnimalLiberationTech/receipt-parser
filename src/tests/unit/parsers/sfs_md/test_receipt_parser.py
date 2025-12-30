@@ -16,21 +16,21 @@ LIN_RECEIPT_URL = (
 
 
 class TestSfsMdReceiptParser(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        logger = Mock()
-        cls.parser = SfsMdReceiptParser(logger)
-
     def test_parse(self):
+        logger = Mock()
+
+        parser = SfsMdReceiptParser(logger, UUID(USER_ID_1), KL_RECEIPT.receipt_url)
         self.assertEqual(
-            self.parser.parse_html(load_stub_file(KL_RECEIPT_PATH))
-            .build_receipt(UUID(USER_ID_1))
+            parser.parse_html(load_stub_file(KL_RECEIPT_PATH))
+            .build_receipt()
             .receipt,
             KL_RECEIPT,
         )
+
+        parser = SfsMdReceiptParser(logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url)
         self.assertEqual(
-            self.parser.parse_html(load_stub_file(LIN_RECEIPT_PATH))
-            .build_receipt(UUID(USER_ID_1))
+            parser.parse_html(load_stub_file(LIN_RECEIPT_PATH))
+            .build_receipt()
             .receipt,
             LIN_RECEIPT,
         )

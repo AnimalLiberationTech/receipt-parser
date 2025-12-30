@@ -30,12 +30,13 @@ class TestSfsMdReceipt(TestCase):
             key=self.key,
             total_amount=self.total_amount,
             purchases=self.purchases,
-            receipt_url="receipt_url",
+            receipt_url="http://example.com",
+            receipt_canonical_url="wrong_url",
         )
         self.assertTrue(receipt.id.startswith(CountryCode.MOLDOVA))
         self.assertEqual(receipt.country_code, CountryCode.MOLDOVA)
         self.assertEqual(receipt.currency_code, CurrencyCode.MOLDOVAN_LEU)
-        self.assertTrue(receipt.receipt_url.startswith("https://mev.sfs.md"))
+        self.assertTrue(receipt.receipt_canonical_url.startswith("https://mev.sfs.md"))
 
     def test_wrong_types(self):
         with self.assertRaises(ValidationError) as ctx:
@@ -50,6 +51,7 @@ class TestSfsMdReceipt(TestCase):
                 key=self.key,
                 total_amount=self.total_amount,
                 purchases=self.purchases,
+                receipt_url="http://example.com",
                 shop_id="NOT_UUID",
             )
 
