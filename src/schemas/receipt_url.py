@@ -4,7 +4,7 @@ from src.schemas.schema_base import SchemaBase
 
 
 class ReceiptUrl(SchemaBase):
-    id: str
+    id: str | None = None
     url: str
     receipt_id: str
     country_code: CountryCode

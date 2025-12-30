@@ -103,7 +103,9 @@ class SfsMdReceiptParser(ReceiptParserBase):
         self.session.create_or_update_one(self.receipt.model_dump(mode="json"))
 
         self.session.use_table(TableName.RECEIPT_URL)
-        receipt_url = ReceiptUrl(url=self.url, receipt_id=self.receipt.id, country_code=CountryCode.MOLDOVA)
+        receipt_url = ReceiptUrl(
+            url=self.url, receipt_id=self.receipt.id, country_code=CountryCode.MOLDOVA
+        )
         self.session.create_one(receipt_url.model_dump(mode="json"))
         receipt_url.url = self.receipt.receipt_canonical_url
         self.session.create_one(receipt_url.model_dump(mode="json"))
