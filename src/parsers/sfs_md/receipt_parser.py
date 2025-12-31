@@ -1,3 +1,5 @@
+import logging
+
 import html
 import json
 import re
@@ -107,24 +109,37 @@ class SfsMdReceiptParser(ReceiptParserBase):
             url=self.url, receipt_id=self.receipt.id, country_code=CountryCode.MOLDOVA
         )
         self.session.create_one(receipt_url.model_dump(mode="json"))
-        receipt_url.url = self.receipt.receipt_canonical_url
-        self.session.create_one(receipt_url.model_dump(mode="json"))
+
+        if self.receipt.receipt_canonical_url:
+            receipt_url_canonical = ReceiptUrl(
+                url=self.receipt.receipt_canonical_url,
+                receipt_id=self.receipt.id,
+                country_code=CountryCode.MOLDOVA,
+            )
+            self.session.create_one(receipt_url_canonical.model_dump(mode="json"))
 
         self.logger.info(self.receipt.model_dump())
         return self.receipt
 
     def get_receipt(self) -> SfsMdReceipt | None:
         self.session.use_table(TableName.RECEIPT_URL)
-        receipt_url = self.session.read_one(
-            make_hash(self.url), partition_key=CountryCode.MOLDOVA
-        )
-        if receipt_url:
-            self.session.use_table(TableName.RECEIPT)
-            receipt = self.session.read_one(
-                receipt_url["receipt_id"], partition_key=str(self.user_id)
+        try:
+            receipt_url = self.session.read_one(
+                make_hash(self.url), partition_key=CountryCode.MOLDOVA
             )
-            if receipt:
-                return SfsMdReceipt(**receipt)
+            if not receipt_url:
+                return None
+            url = ReceiptUrl(**receipt_url)
+        except Exception:
+            return None
+
+        self.logger.info("receipt id: " + url.receipt_id)
+        self.session.use_table(TableName.RECEIPT)
+        receipt = self.session.read_one(
+            url.receipt_id, partition_key=str(self.user_id)
+        )
+        if receipt:
+            return SfsMdReceipt(**receipt)
         return None
 
     def validate_receipt_url(self) -> bool:

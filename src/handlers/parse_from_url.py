@@ -5,6 +5,7 @@ from uuid import UUID
 
 from src.helpers.common import get_html
 from src.parsers.sfs_md.receipt_parser import SfsMdReceiptParser
+from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 
 def parse_from_url_handler(url: str, user_id: str, logger: Any) -> tuple[HTTPStatus, dict]:  # pylint: disable=line-too-long
@@ -21,7 +22,7 @@ def parse_from_url_handler(url: str, user_id: str, logger: Any) -> tuple[HTTPSta
         return HTTPStatus.BAD_REQUEST, {"msg": "Unsupported URL"}
 
     try:
-        receipt = parser.get_receipt()
+        receipt: SfsMdReceipt = parser.get_receipt()
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error retrieving receipt: {e}")
         return HTTPStatus.INTERNAL_SERVER_ERROR, {"msg": "Error retrieving receipt"}
