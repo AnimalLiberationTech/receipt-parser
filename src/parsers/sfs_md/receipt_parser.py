@@ -123,21 +123,20 @@ class SfsMdReceiptParser(ReceiptParserBase):
 
     def get_receipt(self) -> SfsMdReceipt | None:
         self.session.use_table(TableName.RECEIPT_URL)
-        try:
-            receipt_url = self.session.read_one(
-                make_hash(self.url), partition_key=CountryCode.MOLDOVA
-            )
-            if not receipt_url:
-                return None
-            url = ReceiptUrl(**receipt_url)
-        except Exception:
+
+        receipt_url = self.session.read_one(
+            make_hash(self.url), partition_key=CountryCode.MOLDOVA.value
+        )
+
+        if not receipt_url:
+            self.logger.info(f"Receipt URL not found for hash: {make_hash(self.url)}")
             return None
+        url = ReceiptUrl(**receipt_url)
 
         self.logger.info("receipt id: " + url.receipt_id)
+
         self.session.use_table(TableName.RECEIPT)
-        receipt = self.session.read_one(
-            url.receipt_id, partition_key=str(self.user_id)
-        )
+        receipt = self.session.read_one(url.receipt_id, partition_key=str(self.user_id))
         if receipt:
             return SfsMdReceipt(**receipt)
         return None

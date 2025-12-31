@@ -28,7 +28,7 @@ def parse_from_url_handler(url: str, user_id: str, logger: Any) -> tuple[HTTPSta
         return HTTPStatus.INTERNAL_SERVER_ERROR, {"msg": "Error retrieving receipt"}
 
     if receipt:
-        logger.info(f"Receipt found in the db")
+        logger.info("Receipt found in the db")
     else:
         receipt_html = get_html(url, logger)
         if not receipt_html:
