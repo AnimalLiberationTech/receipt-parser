@@ -10,6 +10,7 @@ dependencies = [
     "coverage",
     "google-auth-oauthlib",
     "jinja2==3.1.6",
+    "psycopg2-binary>=2.9.11",
     "pydantic[email]",
     "six>=1.17.0",
 ]
@@ -40,6 +41,7 @@ dev = [
     "black",
     "pylint>=4.0.4",
     "pytest>=9.0.2",
+    "testcontainers[postgres]>=4.13.3",
 ]
 
 [tool.uv]

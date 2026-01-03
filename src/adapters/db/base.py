@@ -45,17 +45,9 @@ class BaseDBAdapter(ABC):
         pass
 
     @abstractmethod
-    def create_db(self) -> Self:
-        pass
-
-    @abstractmethod
     def create_table(self, table_name: TableName, **kwargs) -> Self:
         pass
 
     @abstractmethod
     def drop_table(self, table_name: TableName) -> None:
-        pass
-
-    @abstractmethod
-    def drop_db(self) -> None:
         pass

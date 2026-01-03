@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID
 
-from src.adapters.db.cosmos_db_core import init_db_session
+from src.adapters.db.postgresql_core import init_db_session
 from src.helpers.common import split_list, make_hash
 from src.parsers.receipt_parser_base import ReceiptParserBase
 from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode

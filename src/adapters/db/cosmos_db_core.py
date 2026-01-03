@@ -119,7 +119,7 @@ class CosmosDBCoreAdapter(BaseDBAdapter, ABC):
 
 
 # Function to format the where clause for CosmosDB query
-def format_where(where: dict[str, str | tuple]) -> (str, list[dict[str, Any]]):
+def format_where(where: dict[str, str | tuple]) -> tuple[str, list[dict[str, Any]]]:
     where_str = ""
     where_params = []
     for key, value in where.items():

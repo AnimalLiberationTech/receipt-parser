@@ -38,7 +38,6 @@ class TestStaticPages(TestCase):
 #         logger = Mock()
 #         cls.host = os.environ["WEBSITE_HOSTNAME"]
 #         cls.session = CosmosDBCoreAdapter(EnvType.TEST, logger)
-#         cls.session.create_db()
 #
 #     def setUp(self):
 #         for table_name, partition_key in list(zip(TableName, TablePartitionKey)):
@@ -87,7 +86,4 @@ class TestStaticPages(TestCase):
 #         data = {"shop_id": SHOP_ID_1, "items": items}
 #         response = requests.post(f"{self.host}/add-barcodes", data=data, timeout=5)
 #         self.assertEqual(response.status_code, HTTPStatus.OK)
-#
-#     @classmethod
-#     def tearDownClass(cls):
-#         cls.session.drop_db()
+

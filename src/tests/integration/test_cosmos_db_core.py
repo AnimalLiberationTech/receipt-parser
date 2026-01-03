@@ -14,7 +14,6 @@ class TestCosmosDBCoreAdapter(TestCase):
     def setUpClass(cls):
         logger = Mock()
         cls.session = CosmosDBCoreAdapter(EnvType.TEST, logger)
-        cls.session.create_db()
 
     def setUp(self):
         self.session.create_table(
@@ -84,6 +83,3 @@ class TestCosmosDBCoreAdapter(TestCase):
     def tearDown(self):
         self.session.drop_table(TableName.RECEIPT)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.session.drop_db()
