@@ -1,5 +1,3 @@
-import logging
-
 import html
 import json
 import re
@@ -12,8 +10,8 @@ from src.helpers.common import split_list, make_hash
 from src.parsers.receipt_parser_base import ReceiptParserBase
 from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode
 from src.schemas.purchased_item import PurchasedItem
-from src.schemas.sfs_md.receipt import SfsMdReceipt
 from src.schemas.receipt_url import ReceiptUrl
+from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
 
@@ -81,10 +79,10 @@ class SfsMdReceiptParser(ReceiptParserBase):
         self.session.use_table(TableName.SHOP)
         shops = self.session.read_many(
             {
-                "shop_address": self.receipt.shop_address,
+                "address": self.receipt.shop_address,
                 "company_id": self.receipt.company_id,
+                "country_code": self.receipt.country_code,
             },
-            partition_key=CountryCode.MOLDOVA,
             limit=1,
         )
         if shops:
@@ -93,7 +91,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
             for i, purchase in enumerate(self.receipt.purchases):
                 self.session.use_table(TableName.SHOP_ITEM)
                 items = self.session.read_many(
-                    {"name": purchase.name}, partition_key=self.receipt.shop_id, limit=1
+                    {"name": purchase.name}, limit=1
                 )
                 if items:
                     self.receipt.purchases[i].item_id = items[0]["id"]
@@ -106,7 +104,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
 
         self.session.use_table(TableName.RECEIPT_URL)
         receipt_url = ReceiptUrl(
-            url=self.url, receipt_id=self.receipt.id, country_code=CountryCode.MOLDOVA
+            url=self.url, receipt_id=self.receipt.id
         )
         self.session.create_one(receipt_url.model_dump(mode="json"))
 
@@ -114,7 +112,6 @@ class SfsMdReceiptParser(ReceiptParserBase):
             receipt_url_canonical = ReceiptUrl(
                 url=self.receipt.receipt_canonical_url,
                 receipt_id=self.receipt.id,
-                country_code=CountryCode.MOLDOVA,
             )
             self.session.create_one(receipt_url_canonical.model_dump(mode="json"))
 
@@ -124,9 +121,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
     def get_receipt(self) -> SfsMdReceipt | None:
         self.session.use_table(TableName.RECEIPT_URL)
 
-        receipt_url = self.session.read_one(
-            make_hash(self.url), partition_key=CountryCode.MOLDOVA.value
-        )
+        receipt_url = self.session.read_one(make_hash(self.url))
 
         if not receipt_url:
             self.logger.info(f"Receipt URL not found for hash: {make_hash(self.url)}")
@@ -136,7 +131,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
         self.logger.info("receipt id: " + url.receipt_id)
 
         self.session.use_table(TableName.RECEIPT)
-        receipt = self.session.read_one(url.receipt_id, partition_key=str(self.user_id))
+        receipt = self.session.read_one(url.receipt_id)
         if receipt:
             return SfsMdReceipt(**receipt)
         return None

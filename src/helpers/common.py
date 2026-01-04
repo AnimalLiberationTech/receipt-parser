@@ -20,6 +20,15 @@ def split_list(lst, delimiter) -> list[list]:
 
 
 def get_html(url: str, logger) -> str | None:
+    # temporary - return stub for testing
+    if url == "https://mev.sfs.md/receipt-verifier/95F2415429F169F017CCA8AF6B8B76D4":
+        stub_path = os.path.join(
+            os.path.dirname(__file__), "..", "tests", "stubs", "receipts", "sfs_md", "linella2.html"
+        )
+        if os.path.exists(stub_path):
+            with open(stub_path, "r", encoding="utf-8") as f:
+                return f.read()
+
     try:
         resp = requests.get(
             url,

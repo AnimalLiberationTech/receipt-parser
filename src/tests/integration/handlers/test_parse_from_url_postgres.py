@@ -109,14 +109,12 @@ class TestParseFromUrlHandlerPostgres(TestCase):
 
         from src.helpers.common import make_hash
         from src.schemas.receipt_url import ReceiptUrl
-        from src.schemas.common import CountryCode
 
         url = KL_RECEIPT.receipt_url
         receipt_url = ReceiptUrl(
             id=make_hash(url),
             url=url,
-            receipt_id=KL_RECEIPT.id,
-            country_code=CountryCode.MOLDOVA
+            receipt_id=KL_RECEIPT.id
         )
         self.adapter.use_table(TableName.RECEIPT_URL)
         self.adapter.create_one(receipt_url.model_dump(mode="json"))

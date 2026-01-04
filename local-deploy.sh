@@ -33,7 +33,7 @@ log_error() {
 }
 
 # Default values
-MIGRATION_TARGET="legacy_000_schema"
+MIGRATION_TARGET="initial_001_schema"
 SKIP_DOCKER=false
 SKIP_MIGRATION=false
 SKIP_FUNCTIONS=false
