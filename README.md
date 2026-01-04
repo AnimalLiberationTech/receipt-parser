@@ -6,12 +6,154 @@ We begin by addressing the more accessible digital receipts, before progressing 
 
 
 ## Running the service locally
+
+### Quick Start (Docker)
+```bash
+# Start PostgreSQL + migrate to legacy schema + build functions
+./local-deploy.sh
+
+# Stop all services
+./local-deploy.sh --down
+```
+
+### Manual Setup
 1. Install Python 3.12
-2. Install [Pipenv](https://pipenv.pypa.io/en/latest/)
-3. Run `export PIPENV_VENV_IN_PROJECT=1 && pipenv sync --dev`
-4. Run `pipenv shell`
-5. Create database and required tables `python src/migrations.py` with `EnvType.DEV`
-6. Run `func start`
+2. Install [uv](https://docs.astral.sh/uv/)
+3. Run `uv sync`
+4. Create database and required tables (see [Database Migrations](#database-migrations))
+5. Run `func start`
+
+### Local Deployment Options
+```bash
+# Deploy with specific migration target
+./local-deploy.sh --target initial_001_schema
+
+# Skip Docker (use existing PostgreSQL)
+./local-deploy.sh --skip-docker
+
+# Skip migration
+./local-deploy.sh --skip-migration
+
+# Skip function deployment
+./local-deploy.sh --skip-functions
+```
+
+### Testing Functions Locally
+```bash
+# Run a function with the local runner
+uv run python local_function_runner.py parse_from_url \
+  --body '{"url": "https://mev.sfs.md/receipt/...", "user_id": "123e4567-e89b-12d3-a456-426614174000"}'
+```
+
+
+## Database Migrations
+
+The project supports both CosmosDB and PostgreSQL databases.
+
+### CosmosDB Migration
+```bash
+uv run python migrations.py --env dev --db cosmos --appinsights "<app-insights-connection-string>"
+```
+
+### PostgreSQL Migration
+
+PostgreSQL migrations use [Alembic](https://alembic.sqlalchemy.org/) for version control, allowing you to upgrade and downgrade database schema versions. A backup is automatically created before each migration.
+
+#### Migration Structure
+
+The migrations are organized as follows:
+- `legacy_000_schema` - The original Plante database schema (extracted from pg_dump backup)
+- `initial_001_schema` - New receipt-parser schema additions based on `src/schemas`
+
+Each migration consists of:
+- `<name>.py` - Alembic migration file that loads SQL files
+- `<name>_up.sql` - SQL for upgrade
+- `<name>_down.sql` - SQL for downgrade
+
+#### Setup Environment Variables
+```bash
+export DEV_POSTGRES_HOST=localhost
+export DEV_POSTGRES_PORT=5432
+export DEV_POSTGRES_DB=receipt_parser
+export DEV_POSTGRES_USER=postgres
+export DEV_POSTGRES_PASSWORD=postgres
+```
+
+#### Migration Commands
+_(make sure PostgreSQL creds are set in .env file)_
+
+**Run migrations (upgrade to latest):**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action up
+```
+
+**Downgrade one revision:**
+```bash
+uv run python migrations.py --env dev --db postgres --action down
+```
+
+**Downgrade to specific revision:**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action down --revision legacy_000_schema
+```
+
+**Show migration history:**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action history
+```
+
+**Show current revision:**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action current
+```
+
+**Create new migration:**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action create -m "add_new_column"
+```
+
+**Skip backup (not recommended for production):**
+```bash
+uv run python migrations.py --env $ENV_NAME --db postgres --action up --no-backup
+```
+
+### Database Backup Utility
+
+The backup utility creates SQL dumps before migrations and can be used standalone:
+
+```bash
+# Create a backup
+uv run python db_backup.py backup --env $ENV_NAME
+
+# List available backups
+uv run python db_backup.py list --env $ENV_NAME
+
+# Restore from backup
+uv run python db_backup.py restore --env $ENV_NAME --file backups/receipt_parser_dev_20260103_120000.sql
+
+# Cleanup old backups (keep last 10)
+uv run python db_backup.py cleanup --env $ENV_NAME --keep 10
+```
+
+#### Splitting a pg_dump backup
+
+If you need to extract schema from a full pg_dump backup:
+```bash
+# Split into schema and data files
+python3 split_backup.py
+
+# Generate down migration from schema file
+python3 split_backup.py --generate-down
+```
+
+### Migration Options
+- `--env`: Required. One of `prod`, `stage`, `dev`, `test`, `local`
+- `--db`: Database type. Either `cosmos` or `postgres` (default: `postgres`)
+- `--action`: Migration action. One of `up`, `down`, `history`, `current`, `create` (default: `up`)
+- `--revision`: Target revision for up/down (default: `head` for up, `-1` for down)
+- `--message`, `-m`: Migration message (required for `create` action)
+- `--no-backup`: Skip backup before migration
+- `--appinsights`: Azure Application Insights connection string (required for CosmosDB)
 
 
 ## Deploying to Azure Functions

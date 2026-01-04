@@ -29,6 +29,7 @@ class Gender(StrEnum):
     FEMALE = "female"
     TRANSGENDER = "transgender"
     NON_BINARY = "non-binary"
+    OTHER = "other"
 
 
 class GenderCode(IntEnum):
@@ -36,6 +37,7 @@ class GenderCode(IntEnum):
     FEMALE = 2
     TRANSGENDER = 3
     NON_BINARY = 4
+    OTHER = 5
 
 
 class User(SchemaBase):

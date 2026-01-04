@@ -3,6 +3,7 @@ name = "receipt-parser"
 version = "0.0.1"
 requires-python = "~=3.12"
 dependencies = [
+    "alembic>=1.17.2",
     "azure-core",
     "azure-cosmos>=4.3.1",
     "azure-functions",

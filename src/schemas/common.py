@@ -6,11 +6,13 @@ class EnvType(StrEnum):
     STAGE = "stage"
     DEV = "dev"
     TEST = "test"
+    LOCAL = "local"
 
 
 class TableName(StrEnum):
     RECEIPT = "receipt"
     RECEIPT_URL = "receipt_url"
+    PURCHASED_ITEM = "purchased_item"
     SHOP = "shop"
     SHOP_ITEM = "shop_item"
     USER = "user"
@@ -45,6 +47,16 @@ class OsmType(StrEnum):
 
 class ReceiptProvider(StrEnum):
     SFS_MD = "sfs_md"
+
+
+class QuantityUnit(StrEnum):
+    PIECE = "pcs"      # pieces/units
+    KILOGRAM = "kg"    # kilograms
+    GRAM = "g"         # grams
+    LITER = "l"        # liters
+    MILLILITER = "ml"  # milliliters
+    METER = "m"        # meters
+    CENTIMETER = "cm"  # centimeters
 
 
 class ItemBarcodeStatus(StrEnum):

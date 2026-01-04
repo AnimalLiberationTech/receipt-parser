@@ -1,7 +1,9 @@
 import os
+import uuid
+from typing import Any, Dict, List, Self
+
 from psycopg2 import connect
 from psycopg2.extras import RealDictCursor, Json
-from typing import Any, Dict, List, Self
 
 from src.adapters.db.base import BaseDBAdapter
 from src.schemas.common import EnvType, TableName
@@ -22,8 +24,7 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
         self.current_db = None
 
     def use_db(self, db_name: str) -> Self:
-        # In Postgres, switching DB usually requires reconnecting,
-        # but here we might just be setting a schema or ignoring if DB is set in connection.
+        # In Postgres, switching DB usually requires reconnecting.
         # For simplicity, we assume the DB is set in connection, or we just track it.
         self.current_db = db_name
         return self
@@ -38,16 +39,14 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
 
         _id = data.get("id")
         if not _id:
-            # If ID is not provided, we might need to generate it or let DB generate it.
-            # Assuming data should have an ID or we generate one.
-            # For consistency with Cosmos adapter which returns ID.
-            import uuid
-
             _id = str(uuid.uuid4())
             data["id"] = _id
 
         with self.connection.cursor() as cursor:
-            query = f"INSERT INTO {self.current_table} (id, data) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING RETURNING id"
+            query = (
+                f"INSERT INTO {self.current_table} (id, data) "
+                "VALUES (%s, %s) ON CONFLICT (id) DO NOTHING RETURNING id"
+            )
             cursor.execute(query, (_id, Json(data)))
             result = cursor.fetchone()
             return result[0] if result else _id
@@ -62,9 +61,9 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
 
         with self.connection.cursor() as cursor:
             query = f"""
-                INSERT INTO {self.current_table} (id, data) 
-                VALUES (%s, %s) 
-                ON CONFLICT (id) 
+                INSERT INTO {self.current_table} (id, data)
+                VALUES (%s, %s)
+                ON CONFLICT (id)
                 DO UPDATE SET data = EXCLUDED.data
             """
             cursor.execute(query, (_id, Json(data)))
@@ -95,7 +94,7 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
             conditions = []
             for key, value in where.items():
                 # Assuming simple equality check on JSON fields
-                conditions.append(f"data->>%s = %s")
+                conditions.append("data->>%s = %s")
                 params.extend([key, str(value)])
 
             if conditions:
@@ -115,7 +114,7 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
             raise ValueError("Table not selected. Use use_table() first.")
 
         with self.connection.cursor() as cursor:
-            # This is a full replacement of data for the given ID, similar to Cosmos replace
+            # Full replacement of data for the given ID, similar to Cosmos replace
             query = f"UPDATE {self.current_table} SET data = %s WHERE id = %s"
             cursor.execute(query, (Json(data), _id))
             return cursor.rowcount > 0
@@ -130,15 +129,27 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
             return cursor.rowcount > 0
 
     def create_table(self, table_name: TableName, **kwargs) -> Self:
-        # Creating a table with id and jsonb data column
+        """Create a table with id and jsonb data column, plus a GIN index."""
         with self.connection.cursor() as cursor:
+            # Create table
             query = f"""
                 CREATE TABLE IF NOT EXISTS {table_name} (
                     id TEXT PRIMARY KEY,
-                    data JSONB
+                    data JSONB NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 )
             """
             cursor.execute(query)
+
+            # Create GIN index for efficient JSONB queries
+            index_query = f"""
+                CREATE INDEX IF NOT EXISTS idx_{table_name}_data
+                ON {table_name} USING GIN (data)
+            """
+            cursor.execute(index_query)
+
+            self.logger.info(f"Table '{table_name}' created or already exists")
         return self
 
     def drop_table(self, table_name: TableName) -> None:

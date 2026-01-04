@@ -151,3 +151,9 @@ env/
 ENV/
 env.bak/
 .google_client_secret.json
+
+# Database backups
+backups/
+
+# Local development
+.local_functions/
