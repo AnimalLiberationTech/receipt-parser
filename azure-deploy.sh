@@ -5,19 +5,19 @@ ENV_NAME=$(echo "$1" | tr '[:upper:]' '[:lower:]')
 ENV_NAME_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 
 LOCATION="germanywestcentral"
-TEMPLATE_PATH="infra/main.bicep"
+TEMPLATE_PATH="azure_infra/main.bicep"
 RESOURCE_GROUP_NAME="receipt-parser-rg"
 
-#if [ "$ENV_NAME" = "test" ]; then
-#  RESOURCE_GROUP_NAME="plante-$ENV_NAME"
-#elif [ "$ENV_NAME" = "dev" ]; then
-#  RESOURCE_GROUP_NAME="plante-$ENV_NAME"
-#elif [ "$ENV_NAME" = "stage" ]; then
-#  RESOURCE_GROUP_NAME="plante-prod"
-#else
-#  echo "Unknown environment: $ENV_NAME"
-#  exit 1
-#fi
+if [ "$ENV_NAME" = "test" ]; then
+  RESOURCE_GROUP_NAME="plante-$ENV_NAME"
+elif [ "$ENV_NAME" = "dev" ]; then
+  RESOURCE_GROUP_NAME="plante-$ENV_NAME"
+elif [ "$ENV_NAME" = "stage" ]; then
+  RESOURCE_GROUP_NAME="plante-prod"
+else
+  echo "Unknown environment: $ENV_NAME"
+  exit 1
+fi
 
 if [ "$ENV_NAME" = "stage" ]; then
   FUNCTION_APP_NAME="receipt-parser"
@@ -56,7 +56,7 @@ if [ "$ENV_NAME" = "dev" ]; then
   jq --arg a "$AZURE_WEB_JOBS_STORAGE" --arg b "$APPINSIGHTS_KEY" \
   --arg c "$COSMOS_DB_ACCOUNT_HOST" --arg d "$COSMOS_DB_ACCOUNT_KEY" --arg e "$COSMOS_DB_DATABASE_ID" \
   '.Values.AzureWebJobsStorage = $a | .Values.APPINSIGHTS_INSTRUMENTATIONKEY = $b | .Values.DEV_COSMOS_DB_ACCOUNT_HOST = $c | .Values.DEV_COSMOS_DB_ACCOUNT_KEY = $d | .Values.DEV_COSMOS_DB_DATABASE_ID = $e | .Values.ENV_NAME = "dev"' \
-  local.settings.json > temp.json && mv temp.json local.settings.json && \
+  azure_functions/local.settings.json > temp.json && mv temp.json azure_functions/local.settings.json && \
 
   sed -i "" "s|APPLICATIONINSIGHTS_CONNECTION_STRING=.*$|APPLICATIONINSIGHTS_CONNECTION_STRING=\"$APPINSIGHTS_CONNECTION_STRING\"|g" .env
 fi && \
@@ -67,7 +67,13 @@ source ./.env && \
 .venv/bin/python ./migrations.py --env "$ENV_NAME" --appinsights "$APPINSIGHTS_CONNECTION_STRING" && \
 
 # Deploy the azure function code
-uv export --format requirements-txt --no-hashes > requirements.txt && \
+# Copy src directory to azure_functions for deployment
+cp -r src azure_functions/ && \
+
+# Generate requirements.txt in azure_functions
+uv export --format requirements-txt --no-hashes > azure_functions/requirements.txt && \
+
+cd azure_functions && \
 if [ "$ENV_NAME" = "stage" ]; then
   # Create stage deployment slot
   az functionapp deployment slot create --name "$FUNCTION_APP_NAME" \
@@ -77,4 +83,5 @@ if [ "$ENV_NAME" = "stage" ]; then
 else
   func azure functionapp publish "$FUNCTION_APP_NAME" --python --build remote
 fi && \
-rm requirements.txt
+cd .. && \
+rm -rf azure_functions/src azure_functions/requirements.txt

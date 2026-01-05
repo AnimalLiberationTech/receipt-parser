@@ -1,5 +1,10 @@
 import json
+import os
+import sys
 from http import HTTPStatus
+
+# Add parent directory to path for src imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from azure.functions import FunctionApp, AuthLevel, HttpRequest, HttpResponse
 

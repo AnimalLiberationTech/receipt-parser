@@ -6,10 +6,10 @@ This script allows you to test Appwrite functions locally without
 the full Open Runtime executor setup.
 
 Usage:
-    python local_function_runner.py <function_name> [--method POST] [--body '{"key": "value"}']
+    python local_appwrite_functions.py <function_name> [--method POST] [--body '{"key": "value"}']
 
 Example:
-    python local_function_runner.py parse_from_url --body '{"url": "https://example.com", "user_id": "123"}'
+    python local_appwrite_functions.py parse_from_url --body '{"url": "https://example.com", "user_id": "123"}'
 """
 
 import argparse

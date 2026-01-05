@@ -10,10 +10,10 @@ We begin by addressing the more accessible digital receipts, before progressing 
 ### Quick Start (Docker)
 ```bash
 # Start PostgreSQL + migrate to legacy schema + build functions
-./local-deploy.sh
+./local-appwrite-deploy.sh
 
 # Stop all services
-./local-deploy.sh --down
+./local-appwrite-deploy.sh --down
 ```
 
 ### Manual Setup
@@ -21,27 +21,31 @@ We begin by addressing the more accessible digital receipts, before progressing 
 2. Install [uv](https://docs.astral.sh/uv/)
 3. Run `uv sync`
 4. Create database and required tables (see [Database Migrations](#database-migrations))
-5. Run `func start`
+5. Run Azure Functions locally:
+   ```bash
+   cd azure_functions
+   func start
+   ```
 
-### Local Deployment Options
+### Local Appwite Deployment Options
 ```bash
 # Deploy with specific migration target
-./local-deploy.sh --target initial_001_schema
+./local-appwrite-deploy.sh --target initial_001_schema
 
 # Skip Docker (use existing PostgreSQL)
-./local-deploy.sh --skip-docker
+./local-appwrite-deploy.sh --skip-docker
 
 # Skip migration
-./local-deploy.sh --skip-migration
+./local-appwrite-deploy.sh --skip-migration
 
 # Skip function deployment
-./local-deploy.sh --skip-functions
+./local-appwrite-deploy.sh --skip-functions
 ```
 
 ### Testing Functions Locally
 ```bash
 # Run a function with the local runner
-uv run python local_function_runner.py parse_from_url \
+uv run python local_appwrite_functions.py parse_from_url \
   --body '{"url": "https://mev.sfs.md/receipt/...", "user_id": "123e4567-e89b-12d3-a456-426614174000"}'
 ```
 
@@ -65,7 +69,7 @@ The migrations are organized as follows:
 - `legacy_000_schema` - The original Plante database schema (extracted from pg_dump backup)
 - `initial_001_schema` - New receipt-parser schema additions based on `src/schemas`
 
-Each migration consists of:
+(almost) every migration consists of:
 - `<name>.py` - Alembic migration file that loads SQL files
 - `<name>_up.sql` - SQL for upgrade
 - `<name>_down.sql` - SQL for downgrade
@@ -74,7 +78,7 @@ Each migration consists of:
 ```bash
 export DEV_POSTGRES_HOST=localhost
 export DEV_POSTGRES_PORT=5432
-export DEV_POSTGRES_DB=receipt_parser
+export DEV_POSTGRES_DB=receipt_local
 export DEV_POSTGRES_USER=postgres
 export DEV_POSTGRES_PASSWORD=postgres
 ```

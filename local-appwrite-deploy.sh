@@ -221,7 +221,7 @@ EOF
     # Print info about testing functions
     echo ""
     log_info "To test functions locally, run:"
-    echo "  uv run python local_function_runner.py parse_from_url --body '{\"url\": \"...\", \"user_id\": \"...\"}'"
+    echo "  uv run python local_appwrite_functions.py parse_from_url --body '{\"url\": \"...\", \"user_id\": \"...\"}'"
 fi
 
 echo ""
@@ -231,7 +231,7 @@ echo "Services:"
 echo "  - PostgreSQL: localhost:${LOCAL_POSTGRES_PORT:-5432} (user: ${LOCAL_POSTGRES_USER:-postgres}, db: ${LOCAL_POSTGRES_DB:-receipt_local})"
 echo ""
 echo "Test functions locally:"
-echo "  uv run python local_function_runner.py parse_from_url --body '{\"url\": \"...\", \"user_id\": \"...\"}'"
+echo "  uv run python local_appwrite_functions.py parse_from_url --body '{\"url\": \"...\", \"user_id\": \"...\"}'"
 echo ""
 echo "To stop services: $0 --down"
 
