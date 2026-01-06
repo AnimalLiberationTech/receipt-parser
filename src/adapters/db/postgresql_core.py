@@ -21,7 +21,7 @@ TABLE_COLUMNS = {
         "receipt_id", "name", "quantity", "quantity_unit", "price", "item_id"
     ],
     TableName.SHOP_ITEM: ["shop_id", "name", "status", "barcode"],
-    TableName.SHOP: ["country_code", "company_id", "address", "osm_object"],
+    TableName.SHOP: ["country_code", "company_id", "address", "osm_data"],
     TableName.USER: [
         "email", "name", "login_generation", "banned", "self_description",
         "gender", "birthday", "user_rights_group", "avatar_id"

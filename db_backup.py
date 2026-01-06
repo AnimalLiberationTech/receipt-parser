@@ -42,7 +42,7 @@ def create_backup(env: str, backup_dir: str = "backups") -> str:
     backup_path.mkdir(parents=True, exist_ok=True)
 
     # Generate backup filename
-    backup_file = backup_path / f"{config['database']}_r{timestamp}.sql"
+    backup_file = backup_path / f"{config['database']}_{timestamp}.sql"
 
     # Set PGPASSWORD environment variable for pg_dump
     env_vars = os.environ.copy()

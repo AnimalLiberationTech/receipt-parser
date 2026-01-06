@@ -1,7 +1,7 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
-from src.helpers.osm import get_osm_id, lookup_osm_object, validate_osm_url, parse_osm_url
+from src.helpers.osm import get_osm_id, lookup_osm_data, validate_osm_url, parse_osm_url
 
 
 class TestOsm(TestCase):
@@ -10,12 +10,26 @@ class TestOsm(TestCase):
         self.assertEqual(get_osm_id("way", "456"), "W456")
         self.assertEqual(get_osm_id("relation", "789"), "R789")
 
-    @patch("requests.get")
-    def test_lookup_osm_object(self, mock_get):
-        mock_get.return_value.json.return_value = [{"key": "value"}]
-        self.assertEqual(lookup_osm_object("node", "123"), {"key": "value"})
-        mock_get.return_value.json.return_value = []
-        self.assertEqual(lookup_osm_object("node", "123"), {})
+    @patch("src.helpers.osm._nominatim")
+    def test_lookup_osm_data(self, mock_nominatim):
+        mock_elem = MagicMock()
+        mock_elem.placeId.return_value = 12345
+        mock_elem.type.return_value = "node"
+        mock_elem.id.return_value = 123
+        mock_elem.displayName.return_value = "Test Place"
+        mock_elem.lat.return_value = "51.5074"
+        mock_elem.lon.return_value = "0.1278"
+        mock_elem.address.return_value = {"city": "London"}
+        mock_elem.tag.return_value = None
+        mock_nominatim.query.return_value = [mock_elem]
+
+        result = lookup_osm_data("node", "123")
+        self.assertEqual(result["place_id"], 12345)
+        self.assertEqual(result["display_name"], "Test Place")
+
+        # Test empty result
+        mock_nominatim.query.return_value = []
+        self.assertEqual(lookup_osm_data("node", "123"), {})
 
     def test_validate_osm_url(self):
         self.assertTrue(validate_osm_url("https://www.openstreetmap.org/node/123"))

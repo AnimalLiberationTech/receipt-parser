@@ -1,4 +1,4 @@
-from enum import StrEnum, Enum
+from enum import StrEnum, Enum, IntEnum
 
 
 class EnvType(StrEnum):
@@ -41,8 +41,14 @@ class CurrencyCode(StrEnum):
 
 class OsmType(StrEnum):
     NODE = "node"
-    WAY = "way"
     RELATION = "relation"
+    WAY = "way"
+
+
+class OsmTypeCode(IntEnum):
+    NODE = 1
+    RELATION = 2
+    WAY = 3
 
 
 class ReceiptProvider(StrEnum):
@@ -50,12 +56,12 @@ class ReceiptProvider(StrEnum):
 
 
 class QuantityUnit(StrEnum):
-    PIECE = "pcs"      # pieces/units
-    KILOGRAM = "kg"    # kilograms
-    GRAM = "g"         # grams
-    LITER = "l"        # liters
+    PIECE = "pcs"  # pieces/units
+    KILOGRAM = "kg"  # kilograms
+    GRAM = "g"  # grams
+    LITER = "l"  # liters
     MILLILITER = "ml"  # milliliters
-    METER = "m"        # meters
+    METER = "m"  # meters
     CENTIMETER = "cm"  # centimeters
 
 

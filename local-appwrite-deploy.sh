@@ -33,9 +33,9 @@ log_error() {
 }
 
 # Default values
-MIGRATION_TARGET="initial_001_schema"
+MIGRATION_TARGET="003_conflicting_schema"
 SKIP_DOCKER=false
-SKIP_MIGRATION=false
+SKIP_MIGRATION=true
 SKIP_FUNCTIONS=false
 RESTORE_DATA=""
 

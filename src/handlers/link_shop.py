@@ -1,9 +1,9 @@
 from http import HTTPStatus
 
 from src.adapters.db.cosmos_db_core import init_db_session
-from src.helpers.osm import validate_osm_url, parse_osm_url, lookup_osm_object
+from src.helpers.osm import validate_osm_url, parse_osm_url, lookup_osm_data
 from src.schemas.common import TableName, OsmType
-from src.schemas.osm_object import OsmObject
+from src.schemas.osm_data import OsmData
 from src.schemas.shop import Shop
 
 
@@ -34,11 +34,11 @@ def link_shop_handler(
         except ValueError:
             return HTTPStatus.BAD_REQUEST, {"msg": "Invalid OSM URL"}
 
-        osm_shop_data = lookup_osm_object(osm_type, osm_key)
+        osm_shop_data = lookup_osm_data(osm_type, osm_key)
         if not osm_shop_data:
             return HTTPStatus.BAD_REQUEST, {"msg": "Failed to get OSM shop details"}
 
-        osm_shop = OsmObject(
+        osm_data = OsmData(
             type=OsmType(osm_type),
             key=int(osm_key),
             lat=osm_shop_data["lat"],
@@ -50,7 +50,7 @@ def link_shop_handler(
             country_code=receipt["country_code"],
             company_id=receipt["company_id"],
             shop_address=receipt["shop_address"],
-            osm_object=osm_shop,
+            osm_data=osm_data,
         ).model_dump(mode="json")
         session.use_table(TableName.SHOP)
         session.create_one(shop)

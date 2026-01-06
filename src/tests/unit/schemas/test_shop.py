@@ -4,20 +4,20 @@ from uuid import UUID
 from pydantic_core._pydantic_core import ValidationError  # noqa
 
 from src.schemas.common import CountryCode, OsmType
-from src.schemas.osm_object import OsmObject
+from src.schemas.osm_data import OsmData
 from src.schemas.shop import Shop
 
 
 class TestShop(TestCase):
     def setUp(self):
-        self.osm_object = OsmObject(type=OsmType.NODE, key=123, lat="7.0", lon="28.0")
+        self.osm_data = OsmData(type=OsmType.NODE, key=123, lat="7.0", lon="28.0")
 
     def test_auto_generated_fields(self):
         shop = Shop(
             country_code=CountryCode.MOLDOVA,
             company_id="company_id",
             shop_address="shop_address",
-            osm_object=self.osm_object,
+            osm_data=self.osm_data,
         )
         self.assertIsInstance(shop.id, UUID)
 
@@ -28,7 +28,7 @@ class TestShop(TestCase):
                 country_code="md",
                 company_id="company_id",
                 shop_address="shop_address",
-                osm_object=self.osm_object,
+                osm_data=self.osm_data,
             )
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 2)

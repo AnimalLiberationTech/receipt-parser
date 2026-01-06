@@ -167,6 +167,57 @@ python3 split_backup.py --generate-down
 4. Deploy app to prod `func azure functionapp publish plante-receipt-parser`
 
 
+## Deploying as HTTP API
+
+### Option 1: FastAPI Server (Standalone)
+
+Run the API server directly using FastAPI/Uvicorn:
+
+```bash
+# Development (with auto-reload)
+uv run uvicorn local_server:app --reload --port 8000
+
+# Production
+uv run uvicorn local_server:app --host 0.0.0.0 --port 8000
+```
+
+The API will be available at `http://localhost:8000` with automatic OpenAPI docs at `/docs`.
+
+### Option 2: Appwrite Functions
+
+Deploy to Appwrite Cloud or self-hosted:
+
+```bash
+# Install Appwrite CLI
+npm install -g appwrite-cli
+
+# Login and deploy
+appwrite login
+appwrite deploy function
+```
+
+### Option 3: Docker
+
+```bash
+# Build and run
+docker build -t receipt-parser-api .
+docker run -p 8000:8000 --env-file .env receipt-parser-api
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Home page |
+| GET | `/health` | Health check |
+| GET | `/shops` | List shops (with query filters) |
+| POST | `/parse-from-url` | Parse receipt from URL |
+| POST | `/link-shop` | Link shop to receipt |
+| POST | `/add-barcodes` | Add barcodes to products |
+| GET | `/terms-of-service` | Terms of service |
+| GET | `/privacy-policy` | Privacy policy |
+
+
 ## Running tests
 
 ### Unit tests

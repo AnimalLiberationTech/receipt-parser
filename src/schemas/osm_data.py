@@ -3,7 +3,7 @@ from src.schemas.common import OsmType
 from src.schemas.schema_base import SchemaBase
 
 
-class OsmObject(SchemaBase):
+class OsmData(SchemaBase):
     id: str | None = None
     type: OsmType
     key: int  # unique only within each type
@@ -14,3 +14,4 @@ class OsmObject(SchemaBase):
 
     def model_post_init(self, __context) -> None:
         self.id = get_osm_id(self.type, str(self.key))
+
