@@ -9,6 +9,7 @@ dependencies = [
     "azure-functions",
     "cachecontrol",
     "coverage",
+    "doppler-sdk>=1.3.0",
     "fastapi>=0.128.0",
     "google-auth-oauthlib",
     "jinja2==3.1.6",
@@ -18,6 +19,14 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "six>=1.17.0",
     "uvicorn>=0.40.0",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "pylint>=4.0.4",
+    "pytest>=9.0.2",
+    "testcontainers[postgres]>=4.13.3",
 ]
 
 [tool.black]
@@ -40,14 +49,6 @@ exclude = '''
   )/
 )
 '''
-
-[dependency-groups]
-dev = [
-    "black",
-    "pylint>=4.0.4",
-    "pytest>=9.0.2",
-    "testcontainers[postgres]>=4.13.3",
-]
 
 [tool.uv]
 package = false

@@ -2,8 +2,7 @@ import json
 import os
 import sys
 
-# Add the directory containing this file to sys.path to allow imports from the same directory
-# This is needed when the function is deployed and 'src' is copied next to main.py
+# needed when the function is deployed and 'src' is copied next to main.py
 current_dir = os.path.dirname(__file__)
 sys.path.append(current_dir)
 

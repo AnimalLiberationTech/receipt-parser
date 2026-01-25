@@ -7,7 +7,7 @@ on:
       - main
     paths:
       - 'src/**'
-      - 'appwrite_functions/parse_from_url/**'
+      - 'appwrite_functions/**'
       - '.github/workflows/deploy-appwrite.yml'
 
 jobs:
@@ -20,9 +20,9 @@ jobs:
       - name: Prepare Build Context
         run: |
           # Copy src directory to the function folder
-          cp -r src appwrite_functions/parse_from_url/
+          cp -r src appwrite_functions/
           # Remove tests from the deployment package
-          rm -rf appwrite_functions/parse_from_url/src/tests
+          rm -rf appwrite_functions/src/tests
 
       - name: Install Appwrite CLI
         run: |
@@ -41,4 +41,4 @@ jobs:
             --function-id ${{ secrets.APPWRITE_FUNCTION_ID }} \
             --activate true \
             --entrypoint main.py \
-            --code appwrite_functions/parse_from_url
+            --code appwrite_functions

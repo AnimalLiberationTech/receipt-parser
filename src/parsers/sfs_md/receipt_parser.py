@@ -14,7 +14,7 @@ from src.schemas.receipt_url import ReceiptUrl
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
-
+QUANTITY_UNITS_REGEX = r'(\d+(\.\d+)?)\s*(kg|g|ml)|(kg+\s+[A-Za-z]+)'
 
 class SfsMdReceiptParser(ReceiptParserBase):
     _data: dict
@@ -54,6 +54,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
                     PurchasedItem(
                         name=purchase[0],
                         quantity=float(quantity),
+                        quantity_unit=unit,
                         price=float(price),
                     )
                 )
