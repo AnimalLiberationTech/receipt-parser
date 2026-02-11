@@ -82,6 +82,8 @@ class TestParseFromUrlHandler(TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(
             body,
-            {"msg": "Receipt successfully processed", "data": {"_id": "receipt_id_direct"}},
+            {
+                "msg": "Receipt successfully processed",
+                "data": {"_id": "receipt_id_direct"},
+            },
         )
-

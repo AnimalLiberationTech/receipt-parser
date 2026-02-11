@@ -87,7 +87,7 @@ def shops_handler(query_params: dict[str, Any], logger) -> tuple[HTTPStatus, dic
 
     # Apply offset and limit
     total = len(shops)
-    result_shops = shops[offset:offset + limit]
+    result_shops = shops[offset : offset + limit]
 
     return HTTPStatus.OK, {
         "items": result_shops,

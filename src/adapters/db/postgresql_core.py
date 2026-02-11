@@ -8,23 +8,42 @@ from psycopg2.extras import RealDictCursor, Json
 from src.adapters.db.base import BaseDBAdapter
 from src.schemas.common import EnvType, TableName
 
-
 # Define the relational columns for each table (excluding id, data, created_at, updated_at)
 TABLE_COLUMNS = {
     TableName.RECEIPT: [
-        "user_id", "date", "company_id", "company_name", "country_code",
-        "cash_register_id", "key", "currency_code", "total_amount",
-        "receipt_url", "shop_id"
+        "user_id",
+        "date",
+        "company_id",
+        "company_name",
+        "country_code",
+        "cash_register_id",
+        "key",
+        "currency_code",
+        "total_amount",
+        "receipt_url",
+        "shop_id",
     ],
     TableName.RECEIPT_URL: ["url", "receipt_id"],
     TableName.PURCHASED_ITEM: [
-        "receipt_id", "name", "quantity", "quantity_unit", "price", "item_id"
+        "receipt_id",
+        "name",
+        "quantity",
+        "quantity_unit",
+        "price",
+        "item_id",
     ],
     TableName.SHOP_ITEM: ["shop_id", "name", "status", "barcode"],
     TableName.SHOP: ["country_code", "company_id", "address", "osm_data"],
     TableName.USER: [
-        "email", "name", "login_generation", "banned", "self_description",
-        "gender", "birthday", "user_rights_group", "avatar_id"
+        "email",
+        "name",
+        "login_generation",
+        "banned",
+        "self_description",
+        "gender",
+        "birthday",
+        "user_rights_group",
+        "avatar_id",
     ],
     TableName.USER_IDENTITY: ["provider", "user_id"],
     TableName.USER_SESSION: ["identity_provider", "user_id", "user_name", "state"],
@@ -239,7 +258,9 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
         values.append(_id)
 
         with self.connection.cursor() as cursor:
-            query = f"UPDATE {self.current_table} SET {', '.join(set_parts)} WHERE id = %s"
+            query = (
+                f"UPDATE {self.current_table} SET {', '.join(set_parts)} WHERE id = %s"
+            )
             cursor.execute(query, values)
             return cursor.rowcount > 0
 

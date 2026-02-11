@@ -8,13 +8,20 @@ from uuid import UUID
 from src.adapters.db.postgresql_core import init_db_session
 from src.helpers.common import split_list, make_hash
 from src.parsers.receipt_parser_base import ReceiptParserBase
-from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode, Unit
+from src.schemas.common import (
+    CountryCode,
+    TableName,
+    ItemBarcodeStatus,
+    CurrencyCode,
+    Unit,
+)
 from src.schemas.purchased_item import PurchasedItem
 from src.schemas.receipt_url import ReceiptUrl
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
 QUANTITY_UNITS_REGEX = r"(?i)(\d+(\.\d+)?)\s*(kg|g|ml|l)(?![A-Za-z])|(kg\s+[A-Za-z]+)"
+
 
 class SfsMdReceiptParser(ReceiptParserBase):
     _data: dict
@@ -100,9 +107,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
 
             for i, purchase in enumerate(self.receipt.purchases):
                 self.session.use_table(TableName.SHOP_ITEM)
-                items = self.session.read_many(
-                    {"name": purchase.name}, limit=1
-                )
+                items = self.session.read_many({"name": purchase.name}, limit=1)
                 if items:
                     self.receipt.purchases[i].item_id = items[0]["_id"]
                     self.receipt.purchases[i].status = items[0].get(
@@ -113,9 +118,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
         self.session.create_or_update_one(self.receipt.model_dump(mode="json"))
 
         self.session.use_table(TableName.RECEIPT_URL)
-        receipt_url = ReceiptUrl(
-            url=self.url, receipt_id=self.receipt.id
-        )
+        receipt_url = ReceiptUrl(url=self.url, receipt_id=self.receipt.id)
         self.session.create_one(receipt_url.model_dump(mode="json"))
 
         if self.receipt.receipt_canonical_url:

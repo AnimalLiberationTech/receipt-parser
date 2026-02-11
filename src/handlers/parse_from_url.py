@@ -8,7 +8,9 @@ from src.parsers.sfs_md.receipt_parser import SfsMdReceiptParser
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 
-def parse_from_url_handler(url: str, user_id: str, logger: Any) -> tuple[HTTPStatus, dict]:  # pylint: disable=line-too-long
+def parse_from_url_handler(
+    url: str, user_id: str, logger: Any
+) -> tuple[HTTPStatus, dict]:  # pylint: disable=line-too-long
     if not url:
         return HTTPStatus.BAD_REQUEST, {"msg": "URL is required"}
 

@@ -82,4 +82,3 @@ class TestCosmosDBCoreAdapter(TestCase):
 
     def tearDown(self):
         self.session.drop_table(TableName.RECEIPT)
-

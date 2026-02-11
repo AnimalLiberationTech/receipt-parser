@@ -14,13 +14,30 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black",
+    "black>=26.1.0",
+    "pylint>=4.0.4",
+    "uvicorn>=0.40.0",
     "coverage",
-    "pylint",
     "pytest",
     "pytest-cov",
-    "testcontainers[postgres]",
 ]
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",    # C0114
+    "missing-class-docstring",     # C0115
+    "missing-function-docstring",  # C0116,
+    "too-few-public-methods",
+]
+
+[tool.pylint.format]
+max-line-length = 90
+
+[tool.pylint.basic]
+good-names = ["e", "logger", "id"]
+
+[tool.pylint.similarities]
+ignore-imports = true
 
 [tool.black]
 line-length = 90
