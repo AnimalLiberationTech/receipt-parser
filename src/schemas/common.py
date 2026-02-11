@@ -55,7 +55,7 @@ class ReceiptProvider(StrEnum):
     SFS_MD = "sfs_md"
 
 
-class QuantityUnit(StrEnum):
+class Unit(StrEnum):
     PIECE = "pcs"  # pieces/units
     KILOGRAM = "kg"  # kilograms
     GRAM = "g"  # grams

@@ -1,6 +1,6 @@
 # Receipt Parser Service
 
-The objective of this service, as implied by its name, is to speed up the process of updating products' availability. 
+The goal of this service, as implied by its name, is to speed up the process of updating products' availability. 
 This is achieved by parsing receipts and linking products to the corresponding shops in the database. 
 We begin by addressing the more accessible digital receipts, before progressing to handling physical ones.
 
@@ -56,7 +56,7 @@ The project supports both CosmosDB and PostgreSQL databases.
 
 ### CosmosDB Migration
 ```bash
-uv run python migrations.py --env dev --db cosmos --appinsights "<app-insights-connection-string>"
+uv run python db_migration.py --env dev --db cosmos --appinsights "<app-insights-connection-string>"
 ```
 
 ### PostgreSQL Migration
@@ -78,47 +78,47 @@ The migrations are organized as follows:
 ```bash
 export DEV_POSTGRES_HOST=localhost
 export DEV_POSTGRES_PORT=5432
-export DEV_POSTGRES_DB=receipt_local
+export DEV_POSTGRES_DB=pbapi_local
 export DEV_POSTGRES_USER=postgres
 export DEV_POSTGRES_PASSWORD=postgres
 ```
 
 #### Migration Commands
-_(make sure PostgreSQL creds are set in .env file)_
+_(make sure PostgreSQL creds are set in the .env file)_
 
 **Run migrations (upgrade to latest):**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action up
+uv run python db_migration.py --env $ENV_NAM````E --db postgres --action up
 ```
 
 **Downgrade one revision:**
 ```bash
-uv run python migrations.py --env dev --db postgres --action down
+uv run python db_migration.py --env dev --db postgres --action down
 ```
 
 **Downgrade to specific revision:**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action down --revision legacy_000_schema
+uv run python db_migration.py --env $ENV_NAME --db postgres --action down --revision legacy_000_schema
 ```
 
 **Show migration history:**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action history
+uv run python db_migration.py --env $ENV_NAME --db postgres --action history
 ```
 
 **Show current revision:**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action current
+uv run python db_migration.py --env $ENV_NAME --db postgres --action current
 ```
 
 **Create new migration:**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action create -m "add_new_column"
+uv run python db_migration.py --env $ENV_NAME --db postgres --action create -m "add_new_column"
 ```
 
 **Skip backup (not recommended for production):**
 ```bash
-uv run python migrations.py --env $ENV_NAME --db postgres --action up --no-backup
+uv run python db_migration.py --env $ENV_NAME --db postgres --action up --no-backup
 ```
 
 ### Database Backup Utility
@@ -228,7 +228,7 @@ Run `python -m unittest discover -s src/tests/unit`
     - `TEST_COSMOS_DB_ACCOUNT_HOST=https://{Cosmos-DB-account-name}.documents.azure.com:443/`
     - `TEST_COSMOS_DB_ACCOUNT_KEY={key}`
     - `TEST_COSMOS_DB_DATABASE_ID=PlanteTest`
-2. Create database and required tables by running `python src/migrations.py` with `EnvType.TEST`
+2. Create database and required tables by running `python db_migration.py` with `EnvType.TEST`
 3. Run `python -m unittest discover -s src/tests/integration`
 
 ### Functional tests

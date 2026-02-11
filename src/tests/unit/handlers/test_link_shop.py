@@ -63,7 +63,7 @@ class TestLinkShopHandler(TestCase):
 
     @patch("src.handlers.link_shop.init_db_session")
     def test_existing_shop_successfully_linked(self, mock_init_db_session):
-        shop_data = {"id": SHOP_ID_1}
+        shop_data = {"_id": SHOP_ID_1}
         mock_session = MagicMock()
         mock_init_db_session.return_value = mock_session
         mock_session.read_many.return_value = [shop_data]

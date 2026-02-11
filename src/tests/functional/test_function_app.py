@@ -56,7 +56,7 @@ class TestStaticPages(TestCase):
 #         self.session.use_table(TableName.RECEIPT)
 #         self.session.create_one(
 #             {
-#                 "id": RECEIPT_ID,
+#                 "_id": RECEIPT_ID,
 #                 "user_id": USER_ID_1,
 #                 "country_code": CountryCode.MOLDOVA,
 #                 "shop_address": "test_shop_address",

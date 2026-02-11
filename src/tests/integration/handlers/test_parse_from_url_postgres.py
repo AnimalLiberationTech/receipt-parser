@@ -80,7 +80,7 @@ class TestParseFromUrlHandlerPostgres(TestCase):
 
         self.assertEqual(status, 200)
         self.assertEqual(response["msg"], "Receipt successfully processed")
-        self.assertEqual(response["data"]["id"], KL_RECEIPT.id)
+        self.assertEqual(response["data"]["_id"], KL_RECEIPT.id)
 
         self.adapter.use_table(TableName.RECEIPT)
         receipt_in_db = self.adapter.read_one(KL_RECEIPT.id)

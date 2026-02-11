@@ -64,7 +64,7 @@ fi && \
 source ./.env && \
 
 # run db migrations
-.venv/bin/python ./migrations.py --env "$ENV_NAME" --appinsights "$APPINSIGHTS_CONNECTION_STRING" && \
+.venv/bin/python ./db_migration.py --env "$ENV_NAME" --appinsights "$APPINSIGHTS_CONNECTION_STRING" && \
 
 # Deploy the azure function code
 # Copy src directory to azure_functions for deployment

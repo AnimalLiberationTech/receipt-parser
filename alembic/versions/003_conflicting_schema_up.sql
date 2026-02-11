@@ -19,7 +19,7 @@ ALTER TABLE shop ADD COLUMN IF NOT EXISTS osm_data JSONB DEFAULT NULL;
 -- ALTER EXISTING USER TABLE
 -- ============================================================================
 -- Schema: src/schemas/user.py
--- Existing fields: id, banned, google_id, login_generation, creation_time,
+-- Existing fields: _id, banned, google_id, login_generation, creation_time,
 --   name, gender, birthday, eats_milk, eats_eggs, eats_honey, user_rights_group,
 --   apple_id, langs_prioritized, self_description, has_avatar, avatar_id
 -- Adding missing fields: email, data, updated_at

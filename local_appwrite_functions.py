@@ -90,7 +90,7 @@ def run_function(function_name: str, method: str = "POST", body: Any = None):
     os.environ.setdefault("ENV_NAME", "dev")
     os.environ.setdefault("DEV_POSTGRES_HOST", "localhost")
     os.environ.setdefault("DEV_POSTGRES_PORT", "5432")
-    os.environ.setdefault("DEV_POSTGRES_DB", "receipt_local")
+    os.environ.setdefault("DEV_POSTGRES_DB", "pbapi_local")
     os.environ.setdefault("DEV_POSTGRES_USER", "postgres")
     os.environ.setdefault("DEV_POSTGRES_PASSWORD", "postgres")
 

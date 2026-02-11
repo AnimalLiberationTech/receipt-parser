@@ -319,58 +319,58 @@ CREATE SEQUENCE user_quiz_id_seq
     CACHE 1;
 
 --
--- Name: moderator_task id; Type: DEFAULT;
+-- Name: moderator_task _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY moderator_task ALTER COLUMN id SET DEFAULT nextval('moderator_task_id_seq'::regclass);
 
 --
--- Name: news_piece_product_at_shop id; Type: DEFAULT;
+-- Name: news_piece_product_at_shop _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY news_piece_product_at_shop ALTER COLUMN id SET DEFAULT nextval('news_piece_product_at_shop_id_seq'::regclass);
 
 --
--- Name: news_piece_table id; Type: DEFAULT;
+-- Name: news_piece_table _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY news_piece_table ALTER COLUMN id SET DEFAULT nextval('news_piece_table_id_seq'::regclass);
 
 --
--- Name: product id; Type: DEFAULT;
+-- Name: product _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product ALTER COLUMN id SET DEFAULT nextval('product_id_seq'::regclass);
 --
--- Name: product_at_shop id; Type: DEFAULT;
+-- Name: product_at_shop _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product_at_shop ALTER COLUMN id SET DEFAULT nextval('product_at_shop_id_seq'::regclass);
 --
--- Name: product_change id; Type: DEFAULT;
+-- Name: product_change _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product_change ALTER COLUMN id SET DEFAULT nextval('product_change_id_seq'::regclass);
 --
--- Name: product_like_table id; Type: DEFAULT;
+-- Name: product_like_table _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product_like_table ALTER COLUMN id SET DEFAULT nextval('product_like_table_id_seq'::regclass);
 --
--- Name: product_presence_vote id; Type: DEFAULT;
+-- Name: product_presence_vote _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product_presence_vote ALTER COLUMN id SET DEFAULT nextval('product_presence_vote_id_seq'::regclass);
 --
--- Name: product_scan id; Type: DEFAULT;
+-- Name: product_scan _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY product_scan ALTER COLUMN id SET DEFAULT nextval('product_scan_id_seq'::regclass);
 --
--- Name: shop id; Type: DEFAULT;
+-- Name: shop _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY shop ALTER COLUMN id SET DEFAULT nextval('shop_id_seq'::regclass);
 --
--- Name: shops_validation_queue id; Type: DEFAULT;
+-- Name: shops_validation_queue _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY shops_validation_queue ALTER COLUMN id SET DEFAULT nextval('shops_validation_queue_id_seq'::regclass);
 --
--- Name: user_contribution id; Type: DEFAULT;
+-- Name: user_contribution _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY user_contribution ALTER COLUMN id SET DEFAULT nextval('user_contribution_id_seq'::regclass);
 --
--- Name: user_quiz id; Type: DEFAULT;
+-- Name: user_quiz _id; Type: DEFAULT;
 --
 ALTER TABLE ONLY user_quiz ALTER COLUMN id SET DEFAULT nextval('user_quiz_id_seq'::regclass);
 --

@@ -8,13 +8,13 @@ from uuid import UUID
 from src.adapters.db.postgresql_core import init_db_session
 from src.helpers.common import split_list, make_hash
 from src.parsers.receipt_parser_base import ReceiptParserBase
-from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode
+from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode, Unit
 from src.schemas.purchased_item import PurchasedItem
 from src.schemas.receipt_url import ReceiptUrl
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
-QUANTITY_UNITS_REGEX = r'(\d+(\.\d+)?)\s*(kg|g|ml)|(kg+\s+[A-Za-z]+)'
+QUANTITY_UNITS_REGEX = r"(?i)(\d+(\.\d+)?)\s*(kg|g|ml|l)(?![A-Za-z])|(kg\s+[A-Za-z]+)"
 
 class SfsMdReceiptParser(ReceiptParserBase):
     _data: dict
@@ -50,11 +50,20 @@ class SfsMdReceiptParser(ReceiptParserBase):
         for purchase in data[1]:
             if purchase[0] != "":
                 quantity, price = purchase[1].split(" x ")
+                unit_groups = re.search(QUANTITY_UNITS_REGEX, purchase[0])
+                unit = None
+                unit_quantity = None
+                if unit_groups:
+                    unit_quantity = float(unit_groups.group(1))
+                    unit_str = unit_groups.group(3).lower()
+                    unit = Unit(unit_str)
+
                 purchases.append(
                     PurchasedItem(
                         name=purchase[0],
                         quantity=float(quantity),
-                        quantity_unit=unit,
+                        unit=unit,
+                        unit_quantity=unit_quantity,
                         price=float(price),
                     )
                 )
@@ -87,7 +96,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
             limit=1,
         )
         if shops:
-            self.receipt.shop_id = shops[0]["id"]
+            self.receipt.shop_id = shops[0]["_id"]
 
             for i, purchase in enumerate(self.receipt.purchases):
                 self.session.use_table(TableName.SHOP_ITEM)
@@ -95,7 +104,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
                     {"name": purchase.name}, limit=1
                 )
                 if items:
-                    self.receipt.purchases[i].item_id = items[0]["id"]
+                    self.receipt.purchases[i].item_id = items[0]["_id"]
                     self.receipt.purchases[i].status = items[0].get(
                         "status", ItemBarcodeStatus.PENDING
                     )
@@ -129,7 +138,7 @@ class SfsMdReceiptParser(ReceiptParserBase):
             return None
         url = ReceiptUrl(**receipt_url)
 
-        self.logger.info("receipt id: " + url.receipt_id)
+        self.logger.info("receipt _id: " + url.receipt_id)
 
         self.session.use_table(TableName.RECEIPT)
         receipt = self.session.read_one(url.receipt_id)

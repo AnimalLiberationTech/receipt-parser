@@ -15,7 +15,7 @@ class TestMigrations(TestCase):
     @patch(
         "sys.argv",
         [
-            "migrations.py",
+            "db_migration.py",
             "--env",
             "dev",
             "--db",

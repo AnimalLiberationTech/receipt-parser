@@ -6,6 +6,7 @@ from uuid import UUID
 
 from azure.functions import HttpRequest, HttpResponse
 
+from adapters.rest import fastapi_routes
 from src.helpers.common import get_template_path
 from src.helpers.session import SESSION_VALIDITY_DAYS
 from src.schemas.user_identity import IdentityProvider
@@ -15,7 +16,7 @@ SESSION_COOKIE_NAME = "session_key"
 
 
 def get_form_data(req: HttpRequest, *args: str) -> tuple[str, ...]:
-    return tuple(req.form.get(val).strip() for val in args)
+    return tuple(fastapi_router.get(val).strip() for val in args)
 
 
 def build_response(

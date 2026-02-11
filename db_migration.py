@@ -7,7 +7,6 @@ from src.adapters.db.cosmos_db_core import CosmosDBCoreAdapter
 from src.helpers.logging import set_logger
 from src.schemas.common import EnvType, TableName, TablePartitionKey
 
-# Import backup utility
 from db_backup import create_backup, cleanup_old_backups
 
 

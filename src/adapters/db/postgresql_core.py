@@ -192,7 +192,7 @@ class PostgreSQLCoreAdapter(BaseDBAdapter):
                     params.append(value)
                 elif self._has_data_column():
                     # Query JSONB field only for tables that have it
-                    conditions.append(f"data->>%s = %s")
+                    conditions.append("data->>%s = %s")
                     params.extend([key, str(value)])
 
             if conditions:

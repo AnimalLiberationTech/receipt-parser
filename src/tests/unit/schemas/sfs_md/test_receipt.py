@@ -20,7 +20,7 @@ class TestSfsMdReceipt(TestCase):
 
     def test_auto_generated_fields(self):
         receipt = SfsMdReceipt(
-            id="id",
+            id="_id",
             date=self.date,
             user_id=self.user_id,
             company_id="company_id",
