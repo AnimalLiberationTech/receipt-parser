@@ -11,11 +11,9 @@ if not os.path.exists(os.path.join(current_dir, "src")):
     sys.path.append(os.path.abspath(os.path.join(current_dir, "../")))
 
 from src.handlers.add_barcodes import add_barcodes_handler
-from src.handlers.home import home_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.handlers.shops import shops_handler
-from src.helpers.common import get_template_path
 
 
 class AppwriteLogger:
@@ -71,29 +69,8 @@ def handle_add_barcodes(body, logger):
     return add_barcodes_handler(shop_id, items, logger)
 
 
-def handle_home(context, logger):
-    status, html_content = home_handler()
-    return context.res.send(html_content, status.value, {"content-type": "text/html"})
-
-
 def handle_health(context, logger):
     return context.res.json({"status": "ok"}, 200)
-
-
-def handle_terms_of_service(context, logger):
-    try:
-        with open(get_template_path("tos-en.html"), "r", encoding="utf8") as file:
-            return context.res.send(file.read(), 200, {"content-type": "text/html"})
-    except FileNotFoundError:
-        return context.res.json({"error": "Terms of service not found"}, 404)
-
-
-def handle_privacy_policy(context, logger):
-    try:
-        with open(get_template_path("privacy-policy-en.html"), "r", encoding="utf8") as file:
-            return context.res.send(file.read(), 200, {"content-type": "text/html"})
-    except FileNotFoundError:
-        return context.res.json({"error": "Privacy policy not found"}, 404)
 
 
 def handle_shops(context, logger):
@@ -111,10 +88,8 @@ ROUTES = {
     (POST, "/parse-from-url"): handle_parse_from_url,
     (POST, "/link-shop"): handle_link_shop,
     (POST, "/add-barcodes"): handle_add_barcodes,
-    (GET, "/"): handle_home,
+    (GET, "/"): handle_health,
     (GET, "/health"): handle_health,
-    (GET, "/terms-of-service"): handle_terms_of_service,
-    (GET, "/privacy-policy"): handle_privacy_policy,
     (GET, "/shops"): handle_shops,
 }
 

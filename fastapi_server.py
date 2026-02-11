@@ -20,11 +20,9 @@ from typing import Optional
 import logging
 
 from src.handlers.add_barcodes import add_barcodes_handler
-from src.handlers.home import home_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.handlers.shops import shops_handler
-from src.helpers.common import get_template_path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,34 +61,12 @@ class AddBarcodesRequest(BaseModel):
     items: list
 
 
-# Routes
-@app.get("/", response_class=HTMLResponse)
-async def home():
-    status, html_content = home_handler()
-    return HTMLResponse(content=html_content, status_code=status.value)
-
-
+@app.get("/")
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
 
-@app.get("/terms-of-service", response_class=HTMLResponse)
-async def terms_of_service():
-    try:
-        with open(get_template_path("tos-en.html"), "r", encoding="utf8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Terms of service not found")
-
-
-@app.get("/privacy-policy", response_class=HTMLResponse)
-async def privacy_policy():
-    try:
-        with open(get_template_path("privacy-policy-en.html"), "r", encoding="utf8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Privacy policy not found")
 
 
 @app.post("/parse")

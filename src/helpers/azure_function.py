@@ -6,7 +6,6 @@ from uuid import UUID
 
 from azure.functions import HttpRequest, HttpResponse
 
-from adapters.rest import fastapi_routes
 from src.helpers.common import get_template_path
 from src.helpers.session import SESSION_VALIDITY_DAYS
 from src.schemas.user_identity import IdentityProvider
