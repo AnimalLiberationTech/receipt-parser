@@ -15,7 +15,7 @@ SESSION_COOKIE_NAME = "session_key"
 
 
 def get_form_data(req: HttpRequest, *args: str) -> tuple[str, ...]:
-    return tuple(fastapi_router.get(val).strip() for val in args)
+    return tuple(req.form.get(val).strip() for val in args)
 
 
 def build_response(
