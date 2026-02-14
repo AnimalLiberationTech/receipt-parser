@@ -224,7 +224,7 @@ class TestSfsMdReceiptParser(TestCase):
         """Test that get_receipt method calls the database API"""
         logger = Mock()
         db_api = Mock()
-        db_api.return_value = LIN_RECEIPT
+        db_api.return_value = LIN_RECEIPT.model_dump()
 
         parser = SfsMdReceiptParser(
             logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
