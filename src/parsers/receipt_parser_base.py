@@ -20,7 +20,3 @@ class ReceiptParserBase(ABC):
     @abstractmethod
     def build_receipt(self) -> Self:
         pass
-
-    @abstractmethod
-    def persist(self) -> Self:
-        pass

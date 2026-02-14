@@ -49,6 +49,15 @@ uv run python local_appwrite_functions.py parse_from_url \
   --body '{"url": "https://mev.sfs.md/receipt/...", "user_id": "123e4567-e89b-12d3-a456-426614174000"}'
 ```
 
+### Parse Receipt from URL logic flow
+- Validate input: require `url` and a valid UUID `user_id`.
+- Create `ReceiptParser` with `logger`, `user_id`, `url`, and `db_api`.
+- Reject unsupported receipt hosts.
+- Try to fetch an existing receipt from storage by URL.
+- If found, return it; otherwise fetch HTML for the receipt URL.
+- Parse HTML, build the receipt model, persist via `db_api`.
+- Return `200` with the receipt payload; map validation errors to `400`, unexpected errors to `500`.
+
 
 ## Database Migrations
 

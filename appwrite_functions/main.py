@@ -1,5 +1,6 @@
 import json
 import os
+
 import sys
 
 # needed when the function is deployed and 'src' is copied next to main.py
@@ -14,6 +15,7 @@ from src.handlers.add_barcodes import add_barcodes_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.handlers.shops import shops_handler
+from src.helpers.appwrite import appwrite_db_api
 
 
 class AppwriteLogger:
@@ -29,6 +31,21 @@ class AppwriteLogger:
     def error(self, msg, *args):
         self.context.error(str(msg) % args if args else str(msg))
 
+
+def build_db_api(context, logger):
+    x_appwrite_key = context.req.headers.get("x-appwrite-key")
+
+    def init_db_api(uri: str, method: str, payload: dict) -> dict | None:
+        return appwrite_db_api(uri, method, payload, x_appwrite_key, logger)
+
+    return init_db_api
+
+
+def with_db_api(func):
+    def wrapper(context, logger):
+        return func(context, logger, build_db_api(context, logger))
+
+    return wrapper
 
 def parse_json_body(func):
     """Decorator that parses JSON body and passes it to the handler."""
@@ -46,12 +63,12 @@ def parse_json_body(func):
         return context.res.json(response, status.value)
     return wrapper
 
-
+@with_db_api
 @parse_json_body
-def handle_parse_from_url(body, logger):
+def handle_parse_from_url(body, logger, db_api):
     url = body.get("url")
     user_id = body.get("user_id")
-    return parse_from_url_handler(url, user_id, logger)
+    return parse_from_url_handler(url, user_id, logger, db_api)
 
 
 @parse_json_body
