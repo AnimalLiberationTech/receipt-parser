@@ -97,7 +97,7 @@ _(make sure PostgreSQL creds are set in the .env file)_
 
 **Run migrations (upgrade to latest):**
 ```bash
-uv run python db_migration.py --env $ENV_NAM````E --db postgres --action up
+uv run python db_migration.py --env $ENV_NAME --db postgres --action up
 ```
 
 **Downgrade one revision:**
