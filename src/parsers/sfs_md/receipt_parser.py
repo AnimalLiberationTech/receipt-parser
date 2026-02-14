@@ -56,9 +56,17 @@ class SfsMdReceiptParser(ReceiptParserBase):
                 unit = None
                 unit_quantity = None
                 if unit_groups:
-                    unit_quantity = float(unit_groups.group(1))
-                    unit_str = unit_groups.group(3).lower()
-                    unit = Unit(unit_str)
+                    # Guard against alternate regex branches where quantity/unit groups are missing
+                    quantity_group = unit_groups.group(1)
+                    unit_group = unit_groups.group(3)
+                    if quantity_group is not None and unit_group is not None:
+                        try:
+                            unit_quantity = float(quantity_group)
+                            unit_str = unit_group.lower()
+                            unit = Unit(unit_str)
+                        except ValueError:
+                            # Leave unit and unit_quantity as None if parsing fails
+                            pass
 
                 purchases.append(
                     PurchasedItem(
