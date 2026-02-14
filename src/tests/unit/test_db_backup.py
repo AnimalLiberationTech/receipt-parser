@@ -106,4 +106,3 @@ class TestDbBackup(TestCase):
             # Should keep the most recent ones
             self.assertTrue(remaining[0].endswith("20260105_120000.sql"))
             self.assertTrue(remaining[1].endswith("20260104_120000.sql"))
-

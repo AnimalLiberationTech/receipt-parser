@@ -3,31 +3,41 @@ name = "receipt-parser"
 version = "0.0.1"
 requires-python = "~=3.12"
 dependencies = [
-    "alembic>=1.17.2",
-    "azure-core",
-    "azure-cosmos>=4.3.1",
-    "azure-functions",
-    "cachecontrol",
-    "coverage",
-    "doppler-sdk>=1.3.0",
-    "fastapi>=0.128.0",
-    "google-auth-oauthlib",
-    "jinja2==3.1.6",
-    "osmpythontools>=0.3.6",
-    "psycopg2-binary>=2.9.11",
+    "alembic",
+    "doppler-sdk",
+    "jinja2",
+    "osmpythontools",
     "pydantic[email]",
-    "python-dotenv>=1.2.1",
-    "six>=1.17.0",
-    "uvicorn>=0.40.0",
+    "python-dotenv",
 ]
 
 [dependency-groups]
 dev = [
-    "black",
+    "black>=26.1.0",
     "pylint>=4.0.4",
-    "pytest>=9.0.2",
-    "testcontainers[postgres]>=4.13.3",
+    "uvicorn>=0.40.0",
+    "coverage",
+    "pytest",
+    "pytest-cov",
+    "fastapi>=0.129.0",
 ]
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-module-docstring",    # C0114
+    "missing-class-docstring",     # C0115
+    "missing-function-docstring",  # C0116,
+    "too-few-public-methods",
+]
+
+[tool.pylint.format]
+max-line-length = 90
+
+[tool.pylint.basic]
+good-names = ["e", "logger", "id"]
+
+[tool.pylint.similarities]
+ignore-imports = true
 
 [tool.black]
 line-length = 90

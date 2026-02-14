@@ -27,7 +27,7 @@ class TestCosmosDBCoreAdapter(TestCase):
     def test_read_one(self):
         created_receipt_id = self.session.create_one(LIN_RECEIPT.model_dump(mode="json"))
         receipt: dict = self.session.read_one(created_receipt_id, partition_key=USER_ID_1)
-        assert receipt["id"] == LIN_RECEIPT.id
+        assert receipt["_id"] == LIN_RECEIPT.id
         assert receipt["date"] == LIN_RECEIPT.date.isoformat()
         assert receipt["user_id"] == USER_ID_1
         assert receipt["company_id"] == LIN_RECEIPT.company_id
@@ -57,7 +57,7 @@ class TestCosmosDBCoreAdapter(TestCase):
             {"company_id": KL_RECEIPT.company_id}, partition_key=USER_ID_1
         )
         assert len(receipts) == 1
-        assert receipts[0]["id"] == created_receipt_id_2 == KL_RECEIPT.id
+        assert receipts[0]["_id"] == created_receipt_id_2 == KL_RECEIPT.id
 
     def test_update_one(self):
         total_amount = LIN_RECEIPT.total_amount
@@ -78,8 +78,7 @@ class TestCosmosDBCoreAdapter(TestCase):
         self.session.delete_one(created_receipt_id_1, partition_key=USER_ID_1)
         receipts = self.session.read_many(partition_key=USER_ID_1)
         assert len(receipts) == 1
-        assert receipts[0]["id"] == created_receipt_id_2 == KL_RECEIPT.id
+        assert receipts[0]["_id"] == created_receipt_id_2 == KL_RECEIPT.id
 
     def tearDown(self):
         self.session.drop_table(TableName.RECEIPT)
-

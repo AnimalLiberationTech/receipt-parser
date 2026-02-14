@@ -22,7 +22,6 @@ from src.helpers.azure_function import (
     format_user_id_cookie,
     format_invalid_user_id_cookie,
 )
-from src.helpers.common import get_template_path
 from src.helpers.logging import set_logger
 from src.helpers.session import validate_session
 from src.schemas.user_session import GoogleUserSession
@@ -121,13 +120,3 @@ def logout(req: HttpRequest) -> HttpResponse:  # pylint: disable=unused-argument
     )
 
 
-@app.route("terms-of-service", methods=["GET"])
-def terms_of_service(req: HttpRequest) -> HttpResponse:  # pylint: disable=unused-argument
-    with open(get_template_path("tos-en.html"), "r", encoding="utf8") as file:
-        return build_response(HTTPStatus.OK, file.read(), mimetype="text/html")
-
-
-@app.route("privacy-policy", methods=["GET"])
-def privacy_policy(req: HttpRequest) -> HttpResponse:  # pylint: disable=unused-argument
-    with open(get_template_path("privacy-policy-en.html"), "r", encoding="utf8") as file:
-        return build_response(HTTPStatus.OK, file.read(), mimetype="text/html")

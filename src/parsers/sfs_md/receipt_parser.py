@@ -2,30 +2,39 @@ import html
 import json
 import re
 from datetime import datetime
-from typing import Self
+from typing import Self, Callable, Any
 from uuid import UUID
 
-from src.adapters.db.postgresql_core import init_db_session
-from src.helpers.common import split_list, make_hash
+from src.helpers.common import split_list
 from src.parsers.receipt_parser_base import ReceiptParserBase
-from src.schemas.common import CountryCode, TableName, ItemBarcodeStatus, CurrencyCode
+from src.schemas.common import CountryCode, CurrencyCode, Unit
 from src.schemas.purchased_item import PurchasedItem
-from src.schemas.receipt_url import ReceiptUrl
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
 RECEIPT_REGEX = r'wire:initial-data="([^"]*receipt\.index-component[^"]*)"'
-QUANTITY_UNITS_REGEX = r'(\d+(\.\d+)?)\s*(kg|g|ml)|(kg+\s+[A-Za-z]+)'
+QUANTITY_UNITS_REGEX = r"(?i)(\d+(\.\d+)?)\s*(kg|g|ml|l)(?![A-Za-z])|(kg\s+[A-Za-z]+)"
+
 
 class SfsMdReceiptParser(ReceiptParserBase):
     _data: dict
     receipt: SfsMdReceipt
     url: str
 
-    def __init__(self, logger, user_id: UUID, url: str):
+    def __init__(self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]):
         self.logger = logger
         self.user_id = user_id
         self.url = url
-        self.session = init_db_session(logger)
+        self.query_db_api = db_api
+
+    def get_receipt(self) -> SfsMdReceipt | None:
+        receipt = self.query_db_api(
+            "/receipt/get-by-url", "POST", {"url": self.url}
+        )
+
+        if receipt and isinstance(receipt, dict):
+            return SfsMdReceipt(**receipt)
+
+        return None
 
     def parse_html(self, page: str) -> Self:
         matches = re.search(RECEIPT_REGEX, page)
@@ -50,11 +59,28 @@ class SfsMdReceiptParser(ReceiptParserBase):
         for purchase in data[1]:
             if purchase[0] != "":
                 quantity, price = purchase[1].split(" x ")
+                unit_groups = re.search(QUANTITY_UNITS_REGEX, purchase[0])
+                unit = None
+                unit_quantity = None
+                if unit_groups:
+                    # Guard against alternate regex branches where quantity/unit groups are missing
+                    quantity_group = unit_groups.group(1)
+                    unit_group = unit_groups.group(3)
+                    if quantity_group is not None and unit_group is not None:
+                        try:
+                            unit_quantity = float(quantity_group)
+                            unit_str = unit_group.lower()
+                            unit = Unit(unit_str)
+                        except ValueError:
+                            # Leave unit and unit_quantity as None if parsing fails
+                            pass
+
                 purchases.append(
                     PurchasedItem(
                         name=purchase[0],
                         quantity=float(quantity),
-                        quantity_unit=unit,
+                        unit=unit,
+                        unit_quantity=unit_quantity,
                         price=float(price),
                     )
                 )
@@ -77,65 +103,10 @@ class SfsMdReceiptParser(ReceiptParserBase):
         return self
 
     def persist(self) -> SfsMdReceipt:
-        self.session.use_table(TableName.SHOP)
-        shops = self.session.read_many(
-            {
-                "address": self.receipt.shop_address,
-                "company_id": self.receipt.company_id,
-                "country_code": self.receipt.country_code,
-            },
-            limit=1,
-        )
-        if shops:
-            self.receipt.shop_id = shops[0]["id"]
-
-            for i, purchase in enumerate(self.receipt.purchases):
-                self.session.use_table(TableName.SHOP_ITEM)
-                items = self.session.read_many(
-                    {"name": purchase.name}, limit=1
-                )
-                if items:
-                    self.receipt.purchases[i].item_id = items[0]["id"]
-                    self.receipt.purchases[i].status = items[0].get(
-                        "status", ItemBarcodeStatus.PENDING
-                    )
-
-        self.session.use_table(TableName.RECEIPT)
-        self.session.create_or_update_one(self.receipt.model_dump(mode="json"))
-
-        self.session.use_table(TableName.RECEIPT_URL)
-        receipt_url = ReceiptUrl(
-            url=self.url, receipt_id=self.receipt.id
-        )
-        self.session.create_one(receipt_url.model_dump(mode="json"))
-
-        if self.receipt.receipt_canonical_url:
-            receipt_url_canonical = ReceiptUrl(
-                url=self.receipt.receipt_canonical_url,
-                receipt_id=self.receipt.id,
-            )
-            self.session.create_one(receipt_url_canonical.model_dump(mode="json"))
-
-        self.logger.info(self.receipt.model_dump())
+        receipt = self.receipt.model_dump()
+        self.logger.info(receipt)
+        self.query_db_api("/receipt/get-or-create", "POST", receipt)
         return self.receipt
-
-    def get_receipt(self) -> SfsMdReceipt | None:
-        self.session.use_table(TableName.RECEIPT_URL)
-
-        receipt_url = self.session.read_one(make_hash(self.url))
-
-        if not receipt_url:
-            self.logger.info(f"Receipt URL not found for hash: {make_hash(self.url)}")
-            return None
-        url = ReceiptUrl(**receipt_url)
-
-        self.logger.info("receipt id: " + url.receipt_id)
-
-        self.session.use_table(TableName.RECEIPT)
-        receipt = self.session.read_one(url.receipt_id)
-        if receipt:
-            return SfsMdReceipt(**receipt)
-        return None
 
     def validate_receipt_url(self) -> bool:
         return any(

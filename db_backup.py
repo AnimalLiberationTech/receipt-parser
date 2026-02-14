@@ -2,7 +2,7 @@
 """Database backup script for PostgreSQL.
 
 Creates a backup of the PostgreSQL database before migrations are performed.
-Backups are stored in the `backups/` directory with timestamp and environment info.
+Backups are stored in the `db_backups/` directory with timestamp and environment info.
 """
 
 import os
@@ -24,7 +24,7 @@ def get_db_config(env: str) -> dict:
     }
 
 
-def create_backup(env: str, backup_dir: str = "backups") -> str:
+def create_backup(env: str, backup_dir: str = "db_backups") -> str:
     """Create a PostgreSQL database backup using pg_dump.
 
     Args:
@@ -122,7 +122,7 @@ def restore_backup(backup_file: str, env: str) -> None:
         raise
 
 
-def list_backups(backup_dir: str = "backups", env: str = None) -> list:
+def list_backups(backup_dir: str = "db_backups", env: str = None) -> list:
     """List available backups.
 
     Args:
@@ -144,7 +144,7 @@ def list_backups(backup_dir: str = "backups", env: str = None) -> list:
     return [str(b) for b in backups]
 
 
-def cleanup_old_backups(backup_dir: str = "backups", keep: int = 10, env: str = None):
+def cleanup_old_backups(backup_dir: str = "db_backups", keep: int = 10, env: str = None):
     """Remove old backups, keeping only the most recent ones.
 
     Args:

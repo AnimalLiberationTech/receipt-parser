@@ -13,7 +13,7 @@ class TestAddBarcodesHandler(TestCase):
         self.name = "Test Item"
         self.items = [
             {
-                "id": SHOP_ITEM_ID_1,
+                "_id": SHOP_ITEM_ID_1,
                 "purchase_id": self.name + "_1",
                 "status": ItemBarcodeStatus.PENDING.value,
                 "barcode": BARCODE_1,
@@ -38,7 +38,7 @@ class TestAddBarcodesHandler(TestCase):
         mock_init_db_session.return_value = mock_session
 
         invalid_item = {
-            "id": SHOP_ITEM_ID_1,
+            "_id": SHOP_ITEM_ID_1,
             "name": self.name,
             "purchase_id": self.name + "_1",
             "status": "INVALID_STATUS",

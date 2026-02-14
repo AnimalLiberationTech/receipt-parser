@@ -98,7 +98,7 @@ else
     log_warning ".env file not found, using defaults"
     export LOCAL_POSTGRES_HOST="localhost"
     export LOCAL_POSTGRES_PORT="5432"
-    export LOCAL_POSTGRES_DB="receipt_local"
+    export LOCAL_POSTGRES_DB="pbapi_local"
     export LOCAL_POSTGRES_USER="postgres"
     export LOCAL_POSTGRES_PASSWORD="postgres"
 fi
@@ -119,7 +119,7 @@ if [ "$SKIP_DOCKER" = false ]; then
 
     # Wait for PostgreSQL to be ready
     log_info "Waiting for PostgreSQL to be ready..."
-    until docker exec receipt-parser-postgres pg_isready -U postgres > /dev/null 2>&1; do
+    until docker exec pbapi-postgres pg_isready -U postgres > /dev/null 2>&1; do
         sleep 1
     done
     log_success "PostgreSQL is ready"
@@ -130,7 +130,7 @@ if [ "$SKIP_MIGRATION" = false ]; then
     log_info "Running database migration to: $MIGRATION_TARGET"
 
     # Run migration using uv
-    uv run python migrations.py --env local --db postgres --action up --revision "$MIGRATION_TARGET" --no-backup
+    uv run python db_migration.py --env local --db postgres --action up --revision "$MIGRATION_TARGET" --no-backup
 
     log_success "Database migration completed"
 fi
@@ -163,7 +163,7 @@ if [ -n "$RESTORE_DATA" ]; then
         -h "${LOCAL_POSTGRES_HOST:-localhost}" \
         -p "${LOCAL_POSTGRES_PORT:-5432}" \
         -U "${LOCAL_POSTGRES_USER:-postgres}" \
-        -d "${LOCAL_POSTGRES_DB:-receipt_local}" \
+        -d "${LOCAL_POSTGRES_DB:-pbapi_local}" \
         -f "$DATA_FILE"
 
     log_success "Data restore completed"
@@ -201,7 +201,7 @@ if [ "$SKIP_FUNCTIONS" = false ]; then
 ENV_NAME=local
 LOCAL_POSTGRES_HOST=host.docker.internal
 LOCAL_POSTGRES_PORT=${LOCAL_POSTGRES_PORT:-5432}
-LOCAL_POSTGRES_DB=${LOCAL_POSTGRES_DB:-receipt_local}
+LOCAL_POSTGRES_DB=${LOCAL_POSTGRES_DB:-pbapi_local}
 LOCAL_POSTGRES_USER=${LOCAL_POSTGRES_USER:-postgres}
 LOCAL_POSTGRES_PASSWORD=${LOCAL_POSTGRES_PASSWORD:-postgres}
 EOF
@@ -228,7 +228,7 @@ echo ""
 log_success "Local deployment completed!"
 echo ""
 echo "Services:"
-echo "  - PostgreSQL: localhost:${LOCAL_POSTGRES_PORT:-5432} (user: ${LOCAL_POSTGRES_USER:-postgres}, db: ${LOCAL_POSTGRES_DB:-receipt_local})"
+echo "  - PostgreSQL: localhost:${LOCAL_POSTGRES_PORT:-5432} (user: ${LOCAL_POSTGRES_USER:-postgres}, db: ${LOCAL_POSTGRES_DB:-pbapi_local})"
 echo ""
 echo "Test functions locally:"
 echo "  uv run python local_appwrite_functions.py parse_from_url --body '{\"url\": \"...\", \"user_id\": \"...\"}'"

@@ -31,7 +31,7 @@ class TestSession(TestCase):
     @patch("src.helpers.session.init_db_session")
     def test_validate_expired_session(self, mock_db_session):
         mock_db_session.return_value.read_one.return_value = {
-            "id": "1",
+            "_id": "1",
             "user_id": "test",
             "created_at": (
                 self.now - timedelta(days=SESSION_VALIDITY_DAYS + 1)
@@ -46,7 +46,7 @@ class TestSession(TestCase):
     @patch("src.helpers.session.init_db_session")
     def test_validate_session(self, mock_db_session):
         mock_db_session.return_value.read_one.return_value = {
-            "id": SESSION_ID,
+            "_id": SESSION_ID,
             "user_id": USER_ID_1,
             "user_name": "John Doe",
             "identity_provider": "google",

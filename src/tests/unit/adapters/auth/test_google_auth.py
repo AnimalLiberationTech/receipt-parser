@@ -62,7 +62,7 @@ class TestGoogleAuth(TestCase):
     def test_get_new_session(self):
         self.mock_db_session.return_value.read_one.return_value = {
             "state": STATE_ID,
-            "id": SESSION_ID,
+            "_id": SESSION_ID,
         }
         result = self.google_auth.get_new_session(UUID(SESSION_ID))
         self.assertEqual(result.id, UUID(SESSION_ID))
@@ -74,7 +74,7 @@ class TestGoogleAuth(TestCase):
     def test_update_session(self):
         self.mock_db_session.return_value.read_one.return_value = {
             "user_id": USER_ID_1,
-            "id": "google_id",
+            "_id": "google_id",
             "provider": IdentityProvider.GOOGLE,
         }
         session = GoogleUserSession(id=UUID(SESSION_ID), state=STATE_ID)

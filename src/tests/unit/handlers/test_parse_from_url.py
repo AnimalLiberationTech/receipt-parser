@@ -75,13 +75,15 @@ class TestParseFromUrlHandler(TestCase):
         mock_parser_instance.validate_receipt_url.return_value = True
 
         mock_receipt = MagicMock()
-        mock_receipt.model_dump.return_value = {"id": "receipt_id_direct"}
+        mock_receipt.model_dump.return_value = {"_id": "receipt_id_direct"}
         mock_parser_instance.get_receipt.return_value = mock_receipt
 
         status, body = parse_from_url_handler(self.url, self.user_id, self.logger)
         self.assertEqual(status, 200)
         self.assertEqual(
             body,
-            {"msg": "Receipt successfully processed", "data": {"id": "receipt_id_direct"}},
+            {
+                "msg": "Receipt successfully processed",
+                "data": {"_id": "receipt_id_direct"},
+            },
         )
-

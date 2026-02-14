@@ -6,7 +6,9 @@ import warnings
 from unittest.mock import MagicMock, patch
 
 # Suppress testcontainers deprecation warning about @wait_container_is_ready
-warnings.filterwarnings("ignore", message=".*wait_container_is_ready.*", category=DeprecationWarning)
+warnings.filterwarnings(
+    "ignore", message=".*wait_container_is_ready.*", category=DeprecationWarning
+)
 
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../")))
@@ -20,6 +22,7 @@ from src.tests import load_stub_file, USER_ID_1
 from src.tests.stubs.receipts.sfs_md.expected_objects import KL_RECEIPT
 
 KL_RECEIPT_PATH = os.path.join("receipts", "sfs_md", "kaufland.html")
+
 
 class TestParseFromUrlHandlerPostgres(TestCase):
     container = None
@@ -36,7 +39,9 @@ class TestParseFromUrlHandlerPostgres(TestCase):
         os.environ["TEST_POSTGRES_USER"] = cls.container.username
         os.environ["TEST_POSTGRES_PASSWORD"] = cls.container.password
         os.environ["ENV_NAME"] = "test"
-        os.environ["TEST_COSMOS_DB_DATABASE_ID"] = "test_db" # Mock for init_db_session logic
+        os.environ["TEST_COSMOS_DB_DATABASE_ID"] = (
+            "test_db"  # Mock for init_db_session logic
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -80,7 +85,7 @@ class TestParseFromUrlHandlerPostgres(TestCase):
 
         self.assertEqual(status, 200)
         self.assertEqual(response["msg"], "Receipt successfully processed")
-        self.assertEqual(response["data"]["id"], KL_RECEIPT.id)
+        self.assertEqual(response["data"]["_id"], KL_RECEIPT.id)
 
         self.adapter.use_table(TableName.RECEIPT)
         receipt_in_db = self.adapter.read_one(KL_RECEIPT.id)
@@ -99,7 +104,9 @@ class TestParseFromUrlHandlerPostgres(TestCase):
 
     @patch("src.parsers.sfs_md.receipt_parser.init_db_session")
     @patch("src.handlers.parse_from_url.get_html")
-    def test_parse_from_url_handler_already_exists(self, mock_get_html, mock_init_db_session):
+    def test_parse_from_url_handler_already_exists(
+        self, mock_get_html, mock_init_db_session
+    ):
         # Setup mocks
         mock_init_db_session.return_value = self.adapter
 
@@ -111,11 +118,7 @@ class TestParseFromUrlHandlerPostgres(TestCase):
         from src.schemas.receipt_url import ReceiptUrl
 
         url = KL_RECEIPT.receipt_url
-        receipt_url = ReceiptUrl(
-            id=make_hash(url),
-            url=url,
-            receipt_id=KL_RECEIPT.id
-        )
+        receipt_url = ReceiptUrl(id=make_hash(url), url=url, receipt_id=KL_RECEIPT.id)
         self.adapter.use_table(TableName.RECEIPT_URL)
         self.adapter.create_one(receipt_url.model_dump(mode="json"))
 
@@ -132,4 +135,3 @@ class TestParseFromUrlHandlerPostgres(TestCase):
         self.assertEqual(response["msg"], "Receipt successfully processed")
         mock_get_html.assert_not_called()
         self.logger.info.assert_any_call("Receipt found in the db")
-

@@ -18,5 +18,3 @@ def set_logger():
         logger.addHandler(handler)
 
     return logger
-
-
