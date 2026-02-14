@@ -20,34 +20,22 @@ class SfsMdReceiptParser(ReceiptParserBase):
     receipt: SfsMdReceipt
     url: str
 
-    def __init__(self, logger, user_id: UUID, url: str, db_api: Callable[[str], Any]):
+    def __init__(self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]):
         self.logger = logger
         self.user_id = user_id
         self.url = url
         self.query_db_api = db_api
 
     def get_receipt(self) -> SfsMdReceipt | None:
-        """
-        Retrieve a receipt from the database API and ensure it is returned
-        as a SfsMdReceipt instance (or None).
-        """
-        raw_receipt = self.query_db_api(
+        receipt = self.query_db_api(
             "/receipt/get-by-url", "POST", {"url": self.url}
         )
 
-        if raw_receipt is None:
-            return None
+        if receipt and isinstance(receipt, dict):
+            return SfsMdReceipt(**receipt)
 
-        if isinstance(raw_receipt, SfsMdReceipt):
-            return raw_receipt
+        return None
 
-        if isinstance(raw_receipt, dict):
-            return SfsMdReceipt(**raw_receipt)
-
-        self.logger.error(
-            "Unexpected receipt type from db_api: %s", type(raw_receipt)
-        )
-        raise TypeError("db_api returned unsupported receipt type for SfsMdReceipt")
     def parse_html(self, page: str) -> Self:
         matches = re.search(RECEIPT_REGEX, page)
         if matches:

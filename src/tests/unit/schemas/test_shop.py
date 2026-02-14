@@ -32,7 +32,7 @@ class TestShop(TestCase):
             )
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 2)
-        self.assertEqual(errors[0]["loc"], ("_id",))
+        self.assertEqual(errors[0]["loc"], ("id",))
         self.assertEqual(errors[0]["msg"], "Input should be an instance of UUID")
         self.assertEqual(errors[1]["loc"], ("country_code",))
         self.assertEqual(errors[1]["msg"], "Input should be an instance of CountryCode")

@@ -7,7 +7,6 @@ dependencies = [
     "doppler-sdk",
     "jinja2",
     "osmpythontools",
-    "psycopg2-binary",
     "pydantic[email]",
     "python-dotenv",
 ]
@@ -20,6 +19,7 @@ dev = [
     "coverage",
     "pytest",
     "pytest-cov",
+    "fastapi>=0.129.0",
 ]
 
 [tool.pylint.messages_control]

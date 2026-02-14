@@ -63,8 +63,8 @@ def parse_json_body(func):
         return context.res.json(response, status.value)
     return wrapper
 
-@with_db_api
 @parse_json_body
+@with_db_api
 def handle_parse_from_url(body, logger, db_api):
     url = body.get("url")
     user_id = body.get("user_id")

@@ -48,7 +48,7 @@ class TestParseFromUrlHandler(TestCase):
         mock_parser_instance.get_receipt.return_value = None
         mock_get_html.return_value = "<html></html>"
         mock_receipt = MagicMock()
-        mock_receipt.model_dump.return_value = {"_id": "receipt_id"}
+        mock_receipt.model_dump.return_value = {"id": "receipt_id"}
         # pylint: disable=line-too-long
         mock_parser_instance.parse_html.return_value.build_receipt.return_value.persist.return_value = (
             mock_receipt
@@ -56,7 +56,7 @@ class TestParseFromUrlHandler(TestCase):
         status, body = parse_from_url_handler(self.url, self.user_id, self.logger)
         self.assertEqual(status, 200)
         self.assertEqual(
-            body, {"msg": "Receipt successfully processed", "data": {"_id": "receipt_id"}}
+            body, {"msg": "Receipt successfully processed", "data": {"id": "receipt_id"}}
         )
 
     @patch("src.handlers.parse_from_url.SfsMdReceiptParser")

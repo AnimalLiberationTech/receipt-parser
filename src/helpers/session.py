@@ -20,7 +20,7 @@ def validate_session(cookie: UserSessionCookie | None, logger) -> UserSession | 
             now = datetime.now(tz=created_at.tzinfo)
 
             if created_at + timedelta(days=SESSION_VALIDITY_DAYS) < now:
-                db_session.delete_one(session["_id"], partition_key=session["user_id"])
+                db_session.delete_one(session["id"], partition_key=session["user_id"])
             else:
                 return UserSession.model_validate(session)
 

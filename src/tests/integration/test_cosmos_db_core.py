@@ -47,8 +47,8 @@ class TestCosmosDBCoreAdapter(TestCase):
         created_receipt_id_2 = self.session.create_one(KL_RECEIPT.model_dump(mode="json"))
         receipts = self.session.read_many(partition_key=USER_ID_1)
         assert len(receipts) == 2
-        assert receipts[0]["_id"] == created_receipt_id_1 == LIN_RECEIPT.id
-        assert receipts[1]["_id"] == created_receipt_id_2 == KL_RECEIPT.id
+        assert receipts[0]["id"] == created_receipt_id_1 == LIN_RECEIPT.id
+        assert receipts[1]["id"] == created_receipt_id_2 == KL_RECEIPT.id
 
     def test_read_many_where(self):
         self.session.create_one(LIN_RECEIPT.model_dump(mode="json"))
