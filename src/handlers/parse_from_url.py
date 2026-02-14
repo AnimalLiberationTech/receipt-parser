@@ -7,7 +7,7 @@ from src.parsers.sfs_md.receipt_parser import SfsMdReceiptParser
 
 
 def parse_from_url_handler(
-    url: str, user_id: str, logger: Any, db_api: Callable[[str], Any]
+    url: str, user_id: str, logger: Any, db_api: Callable[[str, str, Any], Any]
 ) -> tuple[HTTPStatus, dict]:
     if not url:
         return HTTPStatus.BAD_REQUEST, {"msg": "URL is required"}
