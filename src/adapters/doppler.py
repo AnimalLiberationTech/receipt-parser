@@ -21,9 +21,11 @@ def load_doppler_secrets():
     if not config:
         raise EnvironmentError("DOPPLER_ENVIRONMENT is not set")
 
+    project = os.environ.get("DOPPLER_PROJECT", c.DOPPLER_PROJECT_NAME)
+
     sdk = DopplerSDK()
     sdk.set_access_token(token)
-    response = sdk.secrets.list(project=c.DOPPLER_PROJECT_NAME, config=config)
+    response = sdk.secrets.list(project=project, config=config)
     if response and response.secrets:
         for key, value in response.secrets.items():
             if key in os.environ:
