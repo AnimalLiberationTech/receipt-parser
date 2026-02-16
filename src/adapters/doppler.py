@@ -17,9 +17,16 @@ def load_doppler_secrets():
     if not token:
         raise EnvironmentError(f"{c.DOPPLER_TOKEN_NAME} is not set")
 
-    config = os.environ.get("DOPPLER_ENVIRONMENT", os.environ.get("ENV_NAME"))
+    config = (
+        os.environ.get("DOPPLER_ENVIRONMENT")
+        or os.environ.get("DOPPLER_CONFIG")
+        or os.environ.get("ENV_NAME")
+    )
     if not config:
-        raise EnvironmentError("DOPPLER_ENVIRONMENT is not set")
+        raise EnvironmentError(
+            "Doppler configuration is not set. Set one of DOPPLER_ENVIRONMENT, "
+            "DOPPLER_CONFIG, or ENV_NAME."
+        )
 
     project = os.environ.get("DOPPLER_PROJECT", c.DOPPLER_PROJECT_NAME)
 
