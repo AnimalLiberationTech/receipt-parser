@@ -11,6 +11,7 @@ on:
       - '!src/tests/**'
       - 'pyproject.toml'
       - 'uv.lock'
+      - 'appwrite.json'
       - '.github/workflows/deploy-appwrite.yml'
 
 jobs:
