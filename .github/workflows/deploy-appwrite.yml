@@ -1,13 +1,17 @@
 name: Deploy Appwrite Function
 
 on:
+  # Allows manual deployment from the GitHub Actions tab
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - 'src/**'
-      - 'appwrite_functions/**'
+      - '!src/tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'appwrite.json'
       - '.github/workflows/deploy-appwrite.yml'
 
 jobs:
@@ -15,14 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Prepare Build Context
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Export requirements.txt
         run: |
-          # Copy src directory to the function folder
-          cp -r src appwrite_functions/
-          # Remove tests from the deployment package
-          rm -rf appwrite_functions/src/tests
+            uv export --format requirements-txt --no-dev --output-file requirements.txt
 
       - name: Install Appwrite CLI
         run: |
@@ -32,13 +36,7 @@ jobs:
       - name: Configure Appwrite CLI
         run: |
           appwrite client --endpoint ${{ secrets.APPWRITE_ENDPOINT }} --project-id ${{ secrets.APPWRITE_PROJECT_ID }} --key ${{ secrets.APPWRITE_API_KEY }}
-          # Create appwrite.json to satisfy project context requirement
-          echo "{\"projectId\":\"${{ secrets.APPWRITE_PROJECT_ID }}\",\"projectName\":\"receipt-parser\"}" > appwrite.json
 
       - name: Deploy Function
         run: |
-          appwrite functions create-deployment \
-            --function-id ${{ secrets.APPWRITE_FUNCTION_ID }} \
-            --activate true \
-            --entrypoint main.py \
-            --code appwrite_functions
+            appwrite push functions --all --force

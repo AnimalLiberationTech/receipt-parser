@@ -1,0 +1,28 @@
+{
+    "projectId": "69496060003d273d4a8c",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "functions": [
+        {
+            "$id": "parse_from_url",
+            "name": "Receipt Parser",
+            "runtime": "python-3.12",
+            "specification": "s-0.5vcpu-512mb",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "scopes": ["users.read"],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/adapters/appwrite_functions.py",
+            "commands": "pip install -r requirements.txt",
+            "path": ".",
+            "variables": {
+                "DOPPLER_CONFIG": "prod",
+                "DOPPLER_PROJECT": "parser"
+            }
+        }
+    ]
+}

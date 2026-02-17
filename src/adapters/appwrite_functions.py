@@ -3,14 +3,12 @@ import os
 
 import sys
 
-# needed when the function is deployed and 'src' is copied next to main.py
-current_dir = os.path.dirname(__file__)
-sys.path.append(current_dir)
+current_dir = os.path.dirname(__file__)  # src/adapters/
+base_dir = os.path.abspath(os.path.join(current_dir, "../../"))
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
 
-# Fallback for local development where 'src' is at the project root (one level up)
-if not os.path.exists(os.path.join(current_dir, "src")):
-    sys.path.append(os.path.abspath(os.path.join(current_dir, "../")))
-
+from src.adapters.doppler import load_doppler_secrets
 from src.handlers.add_barcodes import add_barcodes_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
@@ -113,6 +111,8 @@ ROUTES = {
 
 def main(context):
     logger = AppwriteLogger(context)
+
+    load_doppler_secrets()
 
     method = context.req.method
     path = context.req.path
