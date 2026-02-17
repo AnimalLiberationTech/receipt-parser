@@ -21,8 +21,7 @@
             "path": ".",
             "variables": {
                 "DOPPLER_CONFIG": "prod",
-                "DOPPLER_PROJECT": "parser",
-                "PARSER_DOPPLER_PROD_TOKEN": ""
+                "DOPPLER_PROJECT": "parser"
             }
         }
     ]
