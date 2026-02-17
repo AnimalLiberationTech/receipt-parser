@@ -20,9 +20,9 @@
             "commands": "pip install -r requirements.txt",
             "path": ".",
             "variables": {
-                "DOPPLER_CONFIG": "${{ secrets.DOPPLER_CONFIG || 'prod' }}",
-                "DOPPLER_PROJECT": "${{ secrets.DOPPLER_PROJECT || 'parser' }}",
-                "PARSER_DOPPLER_PROD_TOKEN": "${{ secrets.PARSER_DOPPLER_PROD_TOKEN }}"
+                "DOPPLER_CONFIG": "prod",
+                "DOPPLER_PROJECT": "parser",
+                "PARSER_DOPPLER_PROD_TOKEN": ""
             }
         }
     ]
