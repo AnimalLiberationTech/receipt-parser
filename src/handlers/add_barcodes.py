@@ -2,13 +2,12 @@ import json
 from http import HTTPStatus
 from uuid import UUID
 
-from src.adapters.db.cosmos_db_core import init_db_session
 from src.schemas.common import TableName, ItemBarcodeStatus
 from src.schemas.shop_item import ShopItem
 
 
 def add_barcodes_handler(shop_id: str, items: list[dict], logger) -> (HTTPStatus, dict):
-    session = init_db_session(logger)
+    session = None
     session.use_table(TableName.SHOP_ITEM)
 
     invalid_items = []

@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-from src.adapters.db.cosmos_db_core import init_db_session
 from src.helpers.osm import validate_osm_url, parse_osm_url, lookup_osm_data
 from src.schemas.common import TableName, OsmType
 from src.schemas.osm_data import OsmData
@@ -13,7 +12,7 @@ def link_shop_handler(
     if not validate_osm_url(url):
         return HTTPStatus.BAD_REQUEST, {"msg": "Unsupported URL"}
 
-    session = init_db_session(logger)
+    session = None
     session.use_table(TableName.RECEIPT)
     receipt = session.read_one(receipt_id, partition_key=user_id)
     if not receipt:
