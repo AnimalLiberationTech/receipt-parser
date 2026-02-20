@@ -213,19 +213,98 @@ docker build -t receipt-parser-api .
 docker run -p 8000:8000 --env-file .env receipt-parser-api
 ```
 
-### API Endpoints
+### Appwrite + FastAPI Runtime
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Home page |
-| GET | `/health` | Health check |
-| GET | `/shops` | List shops (with query filters) |
-| POST | `/parse-from-url` | Parse receipt from URL |
-| POST | `/link-shop` | Link shop to receipt |
-| POST | `/add-barcodes` | Add barcodes to products |
-| GET | `/terms-of-service` | Terms of service |
-| GET | `/privacy-policy` | Privacy policy |
+The same FastAPI app runs locally and under Appwrite:
 
+**Local (plain FastAPI)**
+```
+Client → FastAPI App → Handlers → Database
+         (Uvicorn Server)
+```
+
+**Appwrite (ASGI adapter)**
+```
+Appwrite Function Context → AppwriteFastAPIAdapter → FastAPI App → Handlers → Database
+     (Appwrite Runtime)         (Translation Layer)
+```
+
+**Entry point**
+- Appwrite runs `src/adapters/appwrite_functions.py` which routes requests through `AppwriteFastAPIAdapter`.
+
+**Adapter responsibilities**
+- Build ASGI scope from Appwrite `context.req`.
+- Provide request body to FastAPI.
+- Capture FastAPI response and write it via `context.res`.
+
+**Environment selection**
+- `ENV_NAME=local` → LocalDbApi (HTTP to `http://127.0.0.1:8000` by default)
+- Otherwise → AppwriteDbApi (calls pbapi function using `x-appwrite-key`)
+
+**Environment variables**
+```bash
+# Local
+export ENV_NAME=local
+export LOCAL_PBAPI_URL=http://127.0.0.1:8000
+
+# Appwrite
+export ENV_NAME=dev  # or prod, stage
+export APPWRITE_FUNCTION_PROJECT_ID=<your-project-id>
+export APPWRITE_FUNCTION_API_ENDPOINT=<your-endpoint>
+```
+
+## Database API
+
+The Database API provides a unified interface to the pbapi service, with different implementations for local and Appwrite environments.
+
+```
+src/db/
+├── db_api_base.py       # Abstract interface
+├── appwrite_db_api.py   # Appwrite implementation
+├── local_db_api.py      # Local HTTP implementation
+└── __init__.py
+```
+
+### Usage in handlers
+
+Use `db_api` as a callable:
+
+```python
+# GET with query params
+receipt = db_api("/receipt/get-by-id", "GET", None, {"receipt_id": receipt_id})
+
+# POST with JSON body
+shop = db_api("/shop/get-or-create", "POST", shop_data)
+```
+
+### LocalDbApi
+
+Used when `ENV_NAME=local`. Sends HTTP requests to a local pbapi server.
+
+```bash
+export ENV_NAME=local
+export LOCAL_PBAPI_URL=http://127.0.0.1:8000
+uv run uvicorn src.adapters.api.fastapi_app:app --reload --port 8001
+```
+
+### AppwriteDbApi
+
+Used when `ENV_NAME` is not `local`. Sends requests via Appwrite function executions to pbapi. Requires `x-appwrite-key` in the incoming request headers.
+
+### Interface
+
+All implementations inherit `DbApiBase` and implement:
+
+```python
+def __call__(
+    self,
+    uri: str,
+    method: str,
+    payload: dict | None,
+    query: dict | None,
+) -> dict | None:
+    ...
+```
 
 ## Running tests
 

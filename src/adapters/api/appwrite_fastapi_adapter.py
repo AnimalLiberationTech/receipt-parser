@@ -69,6 +69,13 @@ class AppwriteFastAPIAdapter:
                     body = context.req.body.encode("utf-8")
                 elif isinstance(context.req.body, bytes):
                     body = context.req.body
+                elif isinstance(context.req.body, (dict, list)):
+                    body = json.dumps(context.req.body).encode("utf-8")
+
+            if not body and hasattr(context.req, "json"):
+                req_json = context.req.json
+                if isinstance(req_json, (dict, list)):
+                    body = json.dumps(req_json).encode("utf-8")
 
             return {
                 "type": "http.request",
