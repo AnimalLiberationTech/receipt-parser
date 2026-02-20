@@ -1,5 +1,6 @@
-import json
 import os
+from http import HTTPStatus
+from uuid import UUID
 
 import sys
 
@@ -13,68 +14,45 @@ from src.handlers.add_barcodes import add_barcodes_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.handlers.shops import shops_handler
-from src.helpers.appwrite import appwrite_db_api
+from src.helpers.appwrite import (
+    CORS_HEADERS,
+    AppwriteLogger,
+    with_db_api,
+    parse_json_body,
+)
+from src.schemas.common import OsmType, ApiResponse
 
 
-class AppwriteLogger:
-    def __init__(self, context):
-        self.context = context
-
-    def info(self, msg, *args):
-        self.context.log(str(msg) % args if args else str(msg))
-
-    def warning(self, msg, *args):
-        self.context.log(f"WARNING: {str(msg) % args if args else str(msg)}")
-
-    def error(self, msg, *args):
-        self.context.error(str(msg) % args if args else str(msg))
-
-
-def build_db_api(context, logger):
-    x_appwrite_key = context.req.headers.get("x-appwrite-key")
-
-    def init_db_api(uri: str, method: str, payload: dict) -> dict | None:
-        return appwrite_db_api(uri, method, payload, x_appwrite_key, logger)
-
-    return init_db_api
-
-
-def with_db_api(func):
-    def wrapper(context, logger):
-        return func(context, logger, build_db_api(context, logger))
-
-    return wrapper
-
-def parse_json_body(func):
-    """Decorator that parses JSON body and passes it to the handler."""
-    def wrapper(context, logger):
-        try:
-            if isinstance(context.req.body, str):
-                body = json.loads(context.req.body)
-            else:
-                body = context.req.body
-        except (json.JSONDecodeError, AttributeError, TypeError) as e:
-            logger.error(f"Error parsing body ({type(e).__name__}): {e}")
-            return context.res.json({"msg": "Invalid JSON body"}, 400)
-
-        status, response = func(body, logger)
-        return context.res.json(response, status.value)
-    return wrapper
-
-@parse_json_body
 @with_db_api
-def handle_parse_from_url(body, logger, db_api):
+@parse_json_body
+def handle_parse_from_url(body, logger, db_api) -> ApiResponse:
     url = body.get("url")
-    user_id = body.get("user_id")
+    if not url:
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail="URL is required")
+
+    try:
+        user_id = UUID(body.get("user_id"))
+    except ValueError:
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail="Invalid user ID")
+
     return parse_from_url_handler(url, user_id, logger, db_api)
 
 
+@with_db_api
 @parse_json_body
-def handle_link_shop(body, logger):
-    url = body.get("url")
-    user_id = body.get("user_id")
+def handle_link_shop(body, logger, db_api) -> ApiResponse:
+    try:
+        osm_type = OsmType(body.get("osm_type"))
+    except ValueError:
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail="Invalid OSM type")
+
+    try:
+        osm_key = int(body.get("osm_key"))
+    except ValueError:
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail="Invalid OSM key")
+
     receipt_id = body.get("receipt_id")
-    return link_shop_handler(url, user_id, receipt_id, logger)
+    return link_shop_handler(osm_type, osm_key, receipt_id, logger, db_api)
 
 
 @parse_json_body
@@ -85,27 +63,36 @@ def handle_add_barcodes(body, logger):
 
 
 def handle_health(context, logger):
-    return context.res.json({"status": "ok"}, 200)
+    return context.res.json({"status": "ok"}, 200, CORS_HEADERS)
+
+
+def handle_options(context, logger):
+    """Handle OPTIONS requests for CORS preflight."""
+    return context.res.send("", 204, CORS_HEADERS)
 
 
 def handle_shops(context, logger):
     """Handle GET /shops - returns shops filtered by query params."""
     query_params = dict(context.req.query) if context.req.query else {}
-    status, response = shops_handler(query_params, logger)
-    return context.res.json(response, status.value)
+    response: ApiResponse = shops_handler(query_params, logger)
+    return context.res.json(response.model_dump(), response.status_code, CORS_HEADERS)
 
 
 GET = "GET"
 POST = "POST"
+OPTIONS = "OPTIONS"
 
 ROUTES = {
     (POST, "/parse"): handle_parse_from_url,
-    (POST, "/parse-from-url"): handle_parse_from_url,
     (POST, "/link-shop"): handle_link_shop,
     (POST, "/add-barcodes"): handle_add_barcodes,
     (GET, "/"): handle_health,
     (GET, "/health"): handle_health,
     (GET, "/shops"): handle_shops,
+    (OPTIONS, "/parse"): handle_options,
+    (OPTIONS, "/link-shop"): handle_options,
+    (OPTIONS, "/add-barcodes"): handle_options,
+    (OPTIONS, "/shops"): handle_options,
 }
 
 
@@ -127,5 +114,6 @@ def main(context):
         return handler(context, logger)
 
     logger.warning(f"Route not found: {method} {path}")
-    return context.res.json({"error": "Not found", "path": path, "method": method}, 404)
-
+    return context.res.json(
+        {"error": "Not found", "path": path, "method": method}, 404, CORS_HEADERS
+    )

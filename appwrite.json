@@ -11,7 +11,7 @@
                 "any"
             ],
             "events": [],
-            "scopes": ["users.read"],
+            "scopes": ["execution.write"],
             "schedule": "",
             "timeout": 15,
             "enabled": true,

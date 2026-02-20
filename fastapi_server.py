@@ -1,6 +1,6 @@
 """
 Standalone HTTP API server for receipt-parser.
-Run with: uvicorn local_server:app --reload --port 8000
+Run with: uvicorn fastapi_server:app --reload --port 8001
 """
 import os
 import sys
@@ -124,5 +124,5 @@ async def get_shops(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
 

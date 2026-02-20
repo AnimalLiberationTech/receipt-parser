@@ -184,10 +184,10 @@ Run the API server directly using FastAPI/Uvicorn:
 
 ```bash
 # Development (with auto-reload)
-uv run uvicorn local_server:app --reload --port 8000
+uv run uvicorn fastapi_server:app --reload --port 8001
 
 # Production
-uv run uvicorn local_server:app --host 0.0.0.0 --port 8000
+uv run uvicorn fastapi_server:app --host 0.0.0.0 --port 8001
 ```
 
 The API will be available at `http://localhost:8000` with automatic OpenAPI docs at `/docs`.

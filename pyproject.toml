@@ -3,9 +3,7 @@ name = "receipt-parser"
 version = "0.0.1"
 requires-python = "~=3.12"
 dependencies = [
-    "alembic",
     "doppler-sdk",
-    "jinja2",
     "osmpythontools",
     "pydantic[email]",
     "python-dotenv",
