@@ -1,10 +1,7 @@
 import json
-import os
 from typing import Callable
-from urllib.parse import urlencode
 
-import requests
-
+from src.db.appwrite_db_api import AppwriteDbApi
 from src.schemas.common import ApiResponse
 
 CORS_HEADERS = {
@@ -14,66 +11,9 @@ CORS_HEADERS = {
 }
 
 
-def appwrite_db_api(
-    uri: str,
-    method: str,
-    payload: dict | None,
-    x_appwrite_key: str,
-    log,
-    query: dict | None = None,
-) -> dict | None:
-    payload = payload or {}
-    headers = {
-        "x-appwrite-key": x_appwrite_key,
-        "x-appwrite-project": os.environ.get("APPWRITE_FUNCTION_PROJECT_ID"),
-    }
-    api_endpoint = os.environ["APPWRITE_FUNCTION_API_ENDPOINT"]
-    # pbapi function call
-    try:
-        path = uri
-        if query:
-            separator = "&" if "?" in path else "?"
-            path = f"{path}{separator}{urlencode(query, doseq=True)}"
-        execution_payload = {
-            "method": method,
-            "path": path,
-            "body": json.dumps(payload),
-            "headers": {"content-type": "application/json"},
-        }
-        response = requests.post(
-            f"{api_endpoint}/functions/pbapi/executions",
-            json=execution_payload,
-            headers=headers,
-            timeout=10,
-        )
-        if response.status_code in [200, 201]:
-            try:
-                result = response.json()
-                # Appwrite returns an execution object, we want the responseBody
-                if "responseBody" in result:
-                    try:
-                        return json.loads(result["responseBody"])
-                    except (ValueError, json.JSONDecodeError):
-                        return result["responseBody"]
-                return result
-            except (ValueError, json.JSONDecodeError) as e:
-                log.error(f"Failed to parse JSON response from pbapi: {str(e)}")
-                return None
-
-        log.error(f"Error calling pbapi: {response.status_code} - {response.text}")
-    except requests.exceptions.Timeout:
-        log.error("Timeout calling pbapi")
-    except requests.exceptions.ConnectionError:
-        log.error("Connection error calling pbapi")
-    except requests.exceptions.RequestException as e:
-        log.error(f"Request exception calling pbapi: {str(e)}")
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        log.error(f"Unexpected exception calling pbapi: {str(e)}")
-
-    return None
-
-
 class AppwriteLogger:
+    """Logger adapter for Appwrite context."""
+
     def __init__(self, context):
         self.context = context
 
@@ -91,20 +31,14 @@ class AppwriteLogger:
 
 
 def build_db_api(context, logger):
+    """Build an AppwriteDbApi instance from Appwrite context."""
     x_appwrite_key = context.req.headers.get("x-appwrite-key")
-
-    def init_db_api(
-        uri: str,
-        method: str,
-        payload: dict | None = None,
-        query: dict | None = None,
-    ) -> dict | None:
-        return appwrite_db_api(uri, method, payload, x_appwrite_key, logger, query)
-
-    return init_db_api
+    return AppwriteDbApi(x_appwrite_key, logger)
 
 
 def with_db_api(func: Callable[..., ApiResponse]) -> Callable[..., ApiResponse]:
+    """Decorator that injects db_api into Appwrite function handlers."""
+
     def wrapper(context, logger) -> ApiResponse:
         return func(context, logger, build_db_api(context, logger))
 

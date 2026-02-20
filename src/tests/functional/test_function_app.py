@@ -59,7 +59,7 @@ class TestStaticPages(TestCase):
 #                 "_id": RECEIPT_ID,
 #                 "user_id": USER_ID_1,
 #                 "country_code": CountryCode.MOLDOVA,
-#                 "shop_address": "test_shop_address",
+#                 "address": "test_shop_address",
 #                 "company_id": "test_company_id",
 #             }
 #         )

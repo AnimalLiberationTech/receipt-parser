@@ -1,10 +1,11 @@
 from http import HTTPStatus
 from typing import Any, Callable
+from uuid import UUID
 
 from src.helpers.osm import lookup_osm_data
 from src.schemas.common import OsmType, ApiResponse
 from src.schemas.osm_data import OsmData
-from src.schemas.request_schemas import LinkShopRequest
+from src.schemas.request_schemas import AddShopPayload
 from src.schemas.shop import Shop
 
 
@@ -41,8 +42,9 @@ def link_shop_handler(
     shop = Shop(
         country_code=receipt["country_code"],
         company_id=receipt["company_id"],
-        shop_address=receipt["shop_address"],
+        address=receipt["shop_address"],
         osm_data=osm_data,
+        creator_user_id=UUID(receipt["user_id"]),
     )
     logger.info(shop.model_dump(mode="json"))
     resp = db_api("/shop/get-or-create", "POST", shop.model_dump(mode="json"))
@@ -55,7 +57,7 @@ def link_shop_handler(
 
     shop = resp["data"]
 
-    payload = LinkShopRequest(shop_id=shop["id"], receipt=receipt)
+    payload = AddShopPayload(shop_id=shop["id"], receipt=receipt)
     resp = db_api("/receipt/add-shop-id", "POST", payload.model_dump(mode="json"))
     logger.info(resp)
     if not resp or resp.get("status_code") != HTTPStatus.OK:
