@@ -230,7 +230,7 @@ Appwrite Function Context → AppwriteFastAPIAdapter → FastAPI App → Handler
 ```
 
 **Entry point**
-- Appwrite runs `src/adapters/appwrite_functions.py` which routes requests through `AppwriteFastAPIAdapter`.
+- Appwrite runs `src/adapters/api/appwrite_functions.py` which routes requests through `AppwriteFastAPIAdapter`.
 
 **Adapter responsibilities**
 - Build ASGI scope from Appwrite `context.req`.
