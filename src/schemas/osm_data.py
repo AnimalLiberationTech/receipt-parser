@@ -13,4 +13,4 @@ class OsmData(SchemaBase):
     address: dict | None = None
 
     def model_post_init(self, __context) -> None:
-        self.id = get_osm_id(self.type, str(self.key))
+        self.id = get_osm_id(self.type, self.key)

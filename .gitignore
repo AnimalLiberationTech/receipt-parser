@@ -157,3 +157,5 @@ db_backups/
 
 # Local development
 .local_functions/
+
+requirements.txt

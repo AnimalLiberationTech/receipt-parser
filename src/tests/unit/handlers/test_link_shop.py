@@ -88,7 +88,7 @@ class TestLinkShopHandler(TestCase):
         mock_session.read_one.return_value = {
             "country_code": CountryCode.MOLDOVA,
             "company_id": "company_id",
-            "shop_address": "shop_address",
+            "address": "shop_address",
         }
         mock_session.read_many.return_value = []  # shop doesn't exist
         mock_session.create_one.return_value = True

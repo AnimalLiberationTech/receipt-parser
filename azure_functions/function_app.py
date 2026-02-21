@@ -10,13 +10,11 @@ from azure.functions import FunctionApp, AuthLevel, HttpRequest, HttpResponse
 
 from src.adapters.auth.google_auth import GoogleAuth, GOOGLE_CALLBACK_URI
 from src.handlers.add_barcodes import add_barcodes_handler
-from src.handlers.home import home_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.helpers.azure_function import (
     get_form_data,
     build_response,
-    login_page_link,
     format_session_cookie,
     get_cookies,
     format_user_id_cookie,
@@ -58,14 +56,6 @@ def add_barcodes(req: HttpRequest) -> HttpResponse:
     logger.info(req.form.to_dict())
     shop_id, items = get_form_data(req, "shop_id", "items")
     return build_response(*add_barcodes_handler(shop_id, json.loads(items), logger))
-
-
-@app.route("home", methods=["GET"])
-def home(req: HttpRequest) -> HttpResponse:
-    if not validate_session(get_cookies(req.headers, logger), logger):
-        return login_page_link()
-
-    return build_response(*home_handler(), mimetype="text/html")
 
 
 @app.route("google-login", methods=["GET"])

@@ -16,7 +16,7 @@ class TestShop(TestCase):
         shop = Shop(
             country_code=CountryCode.MOLDOVA,
             company_id="company_id",
-            shop_address="shop_address",
+            address="shop_address",
             osm_data=self.osm_data,
         )
         self.assertIsInstance(shop.id, UUID)
@@ -27,7 +27,7 @@ class TestShop(TestCase):
                 id="not_uuid",
                 country_code="md",
                 company_id="company_id",
-                shop_address="shop_address",
+                address="shop_address",
                 osm_data=self.osm_data,
             )
         errors = ctx.exception.errors()

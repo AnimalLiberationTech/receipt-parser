@@ -2,8 +2,7 @@ import os
 from http import HTTPStatus
 from typing import Any
 
-from src.adapters.db.postgresql_core import PostgreSQLCoreAdapter
-from src.schemas.common import EnvType, TableName
+from src.schemas.common import TableName, ApiResponse
 
 # Chisinau area approximate bounding box
 CHISINAU_LAT_MIN = 46.95
@@ -15,10 +14,10 @@ CHISINAU_LON_MAX = 28.90
 def init_postgres_session(logger):
     """Initialize PostgreSQL database session."""
     env_name = os.environ.get("ENV_NAME", "local")
-    return PostgreSQLCoreAdapter(EnvType(env_name), logger)
+    # return PostgreSQLCoreAdapter(EnvType(env_name), logger)
 
 
-def shops_handler(query_params: dict[str, Any], logger) -> tuple[HTTPStatus, dict]:
+def shops_handler(query_params: dict[str, Any], logger) -> ApiResponse:
     """
     Get shops with optional filtering by query parameters.
 
@@ -89,9 +88,13 @@ def shops_handler(query_params: dict[str, Any], logger) -> tuple[HTTPStatus, dic
     total = len(shops)
     result_shops = shops[offset : offset + limit]
 
-    return HTTPStatus.OK, {
-        "items": result_shops,
-        "total": total,
-        "limit": limit,
-        "offset": offset,
-    }
+    return ApiResponse(
+        status_code=HTTPStatus.OK,
+        detail="Shops retrieved successfully",
+        data={
+            "items": result_shops,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        },
+    )

@@ -2,12 +2,14 @@ import html
 import json
 import re
 from datetime import datetime
+from http import HTTPStatus
+from http.client import HTTPException
 from typing import Self, Callable, Any
 from uuid import UUID
 
 from src.helpers.common import split_list
 from src.parsers.receipt_parser_base import ReceiptParserBase
-from src.schemas.common import CountryCode, CurrencyCode, Unit
+from src.schemas.common import CountryCode, CurrencyCode, Unit, ApiResponse
 from src.schemas.purchased_item import PurchasedItem
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
@@ -20,19 +22,23 @@ class SfsMdReceiptParser(ReceiptParserBase):
     receipt: SfsMdReceipt
     url: str
 
-    def __init__(self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]):
+    def __init__(
+        self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]
+    ):
         self.logger = logger
         self.user_id = user_id
         self.url = url
         self.query_db_api = db_api
 
     def get_receipt(self) -> SfsMdReceipt | None:
-        receipt = self.query_db_api(
-            "/receipt/get-by-url", "POST", {"url": self.url}
+        resp = ApiResponse(
+            **self.query_db_api("/receipt/get-by-url", "POST", {"url": self.url})
         )
+        if resp.status_code != HTTPStatus.OK:
+            raise HTTPException(status_code=500, detail="Error calling pbapi")
 
-        if receipt and isinstance(receipt, dict):
-            return SfsMdReceipt(**receipt)
+        if resp.data:
+            return SfsMdReceipt(**resp.data)
 
         return None
 
@@ -105,7 +111,10 @@ class SfsMdReceiptParser(ReceiptParserBase):
     def persist(self) -> SfsMdReceipt:
         receipt = self.receipt.model_dump()
         self.logger.info(receipt)
-        self.query_db_api("/receipt/get-or-create", "POST", receipt)
+        resp = self.query_db_api("/receipt/get-or-create", "POST", receipt)
+        if resp.status_code != HTTPStatus.OK:
+            raise HTTPException(status_code=500, detail="Error persisting receipt")
+
         return self.receipt
 
     def validate_receipt_url(self) -> bool:
