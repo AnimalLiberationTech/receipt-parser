@@ -42,6 +42,9 @@ def sync_main(context):
     try:
         return asyncio.run(main(context))
     except RuntimeError:
-        # Event loop already exists, use it
+        # Event loop may already exist; handle both running and non-running cases safely
         loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Schedule the coroutine on the existing running loop and return the task
+            return asyncio.ensure_future(main(context))
         return loop.run_until_complete(main(context))
