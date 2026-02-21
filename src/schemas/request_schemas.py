@@ -34,6 +34,7 @@ class GetOrCreateUserByIdentityRequest(BaseModel):
     email: Optional[EmailStr] = None
     name: str
 
+
 class AddShopPayload(BaseModel):
     shop_id: int
     receipt: SfsMdReceipt
