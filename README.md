@@ -190,7 +190,7 @@ uv run uvicorn src.adapters.api.fastapi_app:app --reload --port 8001
 uv run uvicorn src.adapters.api.fastapi_app:app --host 0.0.0.0 --port 8001
 ```
 
-The API will be available at `http://localhost:8000` with automatic OpenAPI docs at `/docs`.
+The API will be available at `http://localhost:8001` with automatic OpenAPI docs at `/docs`.
 
 ### Option 2: Appwrite Functions
 
