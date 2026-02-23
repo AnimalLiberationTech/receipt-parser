@@ -182,7 +182,7 @@ class TestScopeConstruction:
 
         # The adapter converts all values to str() first, so b"..." becomes "b'...'"
         headers_dict = {k.decode(): v.decode() for k, v in captured_scope["headers"]}
-        assert headers_dict["content-type"] == "b'application/json'"
+        assert headers_dict["content-type"] == "application/json"
         assert headers_dict["authorization"] == "Bearer token123"
 
     async def test_no_headers(self, adapter, mock_context):

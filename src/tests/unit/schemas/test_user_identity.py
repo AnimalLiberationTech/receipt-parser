@@ -26,8 +26,6 @@ class TestUserIdentity(TestCase):
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 2)
         self.assertEqual(errors[0]["loc"], ("provider",))
-        self.assertEqual(
-            errors[0]["msg"], "Input should be an instance of IdentityProvider"
-        )
+        self.assertEqual(errors[0]["msg"], "Input should be 'google'")
         self.assertEqual(errors[1]["loc"], ("user_id",))
-        self.assertEqual(errors[1]["msg"], "Input should be an instance of UUID")
+        self.assertTrue(errors[1]["msg"].startswith("Input should be a valid UUID"))

@@ -13,15 +13,15 @@ class TestShopItem(TestCase):
 
     def test_auto_generated_fields(self):
         item = ShopItem(
-            shop_id=UUID(SHOP_ID_1), name=self.name, status=self.status, barcode=BARCODE_1
+            shop_id=SHOP_ID_1, name=self.name, status=self.status, barcode=BARCODE_1
         )
         self.assertIsInstance(item, ShopItem)
         self.assertIsInstance(item.id, UUID)
 
-    def test_shop_id_not_uuid(self):
+    def test_shop_id_not_int(self):
         with self.assertRaises(ValueError):
             ShopItem(
-                shop_id="NOT_UUID", name=self.name, status=self.status, barcode=BARCODE_1
+                shop_id="NOT_INT", name=self.name, status=self.status, barcode=BARCODE_1
             )
 
     def test_status_not_valid(self):

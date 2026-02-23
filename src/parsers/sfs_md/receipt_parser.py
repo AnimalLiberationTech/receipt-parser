@@ -8,7 +8,7 @@ from uuid import UUID
 
 from src.helpers.common import split_list
 from src.parsers.receipt_parser_base import ReceiptParserBase
-from src.schemas.common import CountryCode, CurrencyCode, Unit, ApiResponse
+from src.schemas.common import CountryCode, CurrencyCode, Unit
 from src.schemas.purchased_item import PurchasedItem
 from src.schemas.sfs_md.receipt import SfsMdReceipt
 
@@ -38,12 +38,12 @@ class SfsMdReceiptParser(ReceiptParserBase):
             )
             raise ValueError("Invalid Plant-Based API response")
 
-        resp = ApiResponse(**resp)
-        if resp.status_code != HTTPStatus.OK:
-            raise ValueError(f"Failed to get receipt: {resp.detail}")
+        if resp.get("status_code") != HTTPStatus.OK:
+            detail = resp.get("detail", "Unknown error")
+            raise ValueError(f"Failed to get receipt: {detail}")
 
-        if resp.data:
-            return SfsMdReceipt(**resp.data)
+        if resp.get("data"):
+            return SfsMdReceipt(**resp.get("data"))
 
         return None
 

@@ -12,23 +12,31 @@ class TestOsm(TestCase):
 
     @patch("src.helpers.osm._nominatim")
     def test_lookup_osm_data(self, mock_nominatim):
-        mock_elem = MagicMock()
-        mock_elem.placeId.return_value = 12345
-        mock_elem.type.return_value = "node"
-        mock_elem.id.return_value = 123
-        mock_elem.displayName.return_value = "Test Place"
-        mock_elem.lat.return_value = "51.5074"
-        mock_elem.lon.return_value = "0.1278"
-        mock_elem.address.return_value = {"city": "London"}
-        mock_elem.tag.return_value = None
-        mock_nominatim.query.return_value = [mock_elem]
+        # Mock the element's toJSON() method to return a dict
+        mock_json_elem = {
+            "place_id": 12345,
+            "lat": "51.5074",
+            "lon": "0.1278"
+        }
+
+        # Mock the first result element
+        mock_first_elem = MagicMock()
+        mock_first_elem.toJSON.return_value = mock_json_elem
+
+        # Mock the query result object
+        mock_result = MagicMock()
+        mock_result.firstResult.return_value = mock_first_elem
+        mock_result.displayName.return_value = "Test Place"
+        mock_result.address.return_value = {"city": "London"}
+
+        mock_nominatim.query.return_value = mock_result
 
         result = lookup_osm_data("node", "123")
         self.assertEqual(result["place_id"], 12345)
         self.assertEqual(result["display_name"], "Test Place")
 
-        # Test empty result
-        mock_nominatim.query.return_value = []
+        # Test empty result - when query returns None or an object without firstResult
+        mock_nominatim.query.return_value = None
         self.assertEqual(lookup_osm_data("node", "123"), {})
 
     def test_validate_osm_url(self):

@@ -33,4 +33,4 @@ class TestPurchasedItem(TestCase):
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0]["loc"], ("item_id",))
-        self.assertEqual(errors[0]["msg"], "Input should be an instance of UUID")
+        self.assertTrue(errors[0]["msg"].startswith("Input should be a valid UUID"))

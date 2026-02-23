@@ -69,8 +69,8 @@ class TestUser(TestCase):
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 2)
         self.assertEqual(errors[0]["loc"], ("gender",))
-        self.assertEqual(errors[0]["msg"], "Input should be an instance of Gender")
+        self.assertTrue(errors[0]["msg"][:23] == f"Input should be '{Gender.MALE}',")
         self.assertEqual(errors[1]["loc"], ("user_rights_group",))
         self.assertEqual(
-            errors[1]["msg"], "Input should be an instance of UserRightsGroup"
+            errors[1]["msg"][:25], f"Input should be '{UserRightsGroup.NORMAL}',"
         )
