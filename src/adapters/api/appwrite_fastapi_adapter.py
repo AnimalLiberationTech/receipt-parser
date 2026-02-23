@@ -127,7 +127,9 @@ class AppwriteFastAPIAdapter:
             response_headers_dict[key_str] = value_str
 
         # Return response via Appwrite context
-        content_type = response_headers_dict.get("content-type", "")
+        # Header names are case-insensitive; build a lowercased view for lookup
+        lower_headers = {str(k).lower(): v for k, v in response_headers_dict.items()}
+        content_type = lower_headers.get("content-type", "")
 
         if "application/json" in content_type:
             try:
