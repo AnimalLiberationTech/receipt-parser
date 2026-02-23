@@ -53,7 +53,9 @@ class AppwriteFastAPIAdapter:
             elif isinstance(query_params, str):
                 query_string = query_params.lstrip("?").encode("utf-8")
             elif isinstance(query_params, (dict, list, tuple)):
-                query_string = urllib.parse.urlencode(query_params, doseq=True).encode("ascii")
+                query_string = urllib.parse.urlencode(query_params, doseq=True).encode(
+                    "ascii"
+                )
 
         scope = {
             "type": "http",

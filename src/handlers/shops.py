@@ -11,12 +11,6 @@ CHISINAU_LON_MIN = 28.77
 CHISINAU_LON_MAX = 28.90
 
 
-def init_postgres_session(logger):
-    """Initialize PostgreSQL database session."""
-    env_name = os.environ.get("ENV_NAME", "local")
-    # return PostgreSQLCoreAdapter(EnvType(env_name), logger)
-
-
 def shops_handler(query_params: dict[str, Any], logger) -> ApiResponse:
     """
     Get shops with optional filtering by query parameters.
@@ -28,8 +22,7 @@ def shops_handler(query_params: dict[str, Any], logger) -> ApiResponse:
     - limit: max number of results (default 50)
     - offset: pagination offset (default 0)
     """
-    session = init_postgres_session(logger)
-    session.use_table(TableName.SHOP)
+    session = None
 
     # Build where clause from query params
     where = {}
