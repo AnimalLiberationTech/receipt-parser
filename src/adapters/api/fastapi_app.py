@@ -136,8 +136,8 @@ async def link_shop(
         )
 
     db_api = get_db_api(req)
-    api_response = link_shop_handler(
-        osm_type, osm_key, request.receipt_id, logger, db_api
+    api_response = await asyncio.to_thread(
+        link_shop_handler, osm_type, osm_key, request.receipt_id, logger, db_api
     )
     return with_status(api_response, response)
 
