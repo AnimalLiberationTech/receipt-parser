@@ -34,7 +34,12 @@ class AppwriteFastAPIAdapter:
         headers = []
         for key, value in (context.req.headers or {}).items():
             key_lower = key.lower() if isinstance(key, str) else key.decode().lower()
-            value_str = str(value) if not isinstance(value, str) else value
+            if isinstance(value, str):
+                value_str = value
+            elif isinstance(value, (bytes, bytearray)):
+                value_str = bytes(value).decode("latin-1", errors="replace")
+            else:
+                value_str = str(value)
             headers.append((key_lower.encode("latin-1"), value_str.encode("latin-1")))
 
         query_string = b""
