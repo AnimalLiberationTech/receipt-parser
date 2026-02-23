@@ -289,7 +289,7 @@ uv run uvicorn src.adapters.api.fastapi_app:app --reload --port 8001
 
 ### AppwriteDbApi
 
-Used when `ENV_NAME` is not `local`. Sends requests via Appwrite function executions to pbapi. Requires `x-appwrite-key` in the incoming request headers.
+Used when `ENV_NAME` is not `local`. Sends requests via Appwrite function executions to pbapi. The Appwrite project API key is read from server-side configuration (for example, environment variables or a secret store) and must not be sent from frontend or mobile clients in headers such as `x-appwrite-key`. Clients should authenticate with user-scoped tokens, while only trusted backend infrastructure holds and uses the project API key when invoking pbapi via Appwrite.
 
 ### Interface
 
