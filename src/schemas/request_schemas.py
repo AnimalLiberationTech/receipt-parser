@@ -23,11 +23,6 @@ class LinkShopRequest(BaseModel):
     receipt_id: str
 
 
-class AddBarcodesRequest(BaseModel):
-    shop_id: int
-    items: list
-
-
 class GetOrCreateUserByIdentityRequest(BaseModel):
     id: str
     provider: IdentityProvider

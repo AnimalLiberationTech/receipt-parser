@@ -1,6 +1,6 @@
+import asyncio
 import logging
 import os
-import time
 from http import HTTPStatus
 from typing import Dict, Any
 
@@ -16,7 +16,6 @@ from src.adapters.logger.default import DefaultLogger
 from src.db.appwrite_db_api import AppwriteDbApi
 from src.db.db_api_base import DbApiBase
 from src.db.local_db_api import LocalDbApi
-from src.handlers.add_barcodes import add_barcodes_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.handlers.shops import shops_handler
@@ -24,7 +23,6 @@ from src.schemas.common import ApiResponse, OsmType
 from src.schemas.request_schemas import (
     ParseFromUrlRequest,
     LinkShopRequest,
-    AddBarcodesRequest,
 )
 
 load_doppler_secrets()
@@ -96,7 +94,6 @@ async def parse_from_url(
     response: Response,
     logger=Depends(get_logger),
 ):
-    """Parse a receipt from a URL."""
     logger.info(f"Parse from URL: {request.url}")
 
     if not request.url:
@@ -106,7 +103,9 @@ async def parse_from_url(
         )
 
     db_api = get_db_api(req)
-    api_response = parse_from_url_handler(request.url, request.user_id, logger, db_api)
+    api_response = await parse_from_url_handler(
+        request.url, request.user_id, logger, db_api
+    )
     return with_status(api_response, response)
 
 
@@ -140,18 +139,6 @@ async def link_shop(
     api_response = link_shop_handler(
         osm_type, osm_key, request.receipt_id, logger, db_api
     )
-    return with_status(api_response, response)
-
-
-@app.post("/add-barcodes", response_model=ApiResponse, tags=["barcodes"])
-async def add_barcodes(
-    request: AddBarcodesRequest,
-    response: Response,
-    logger=Depends(get_logger),
-):
-    """Add barcodes to shop items."""
-    logger.info(f"Add barcodes for shop: {request.shop_id}")
-    api_response = add_barcodes_handler(request.shop_id, request.items, logger)
     return with_status(api_response, response)
 
 
@@ -210,7 +197,7 @@ async def health(logger=Depends(get_logger)):
 @app.get("/health/deep-ping", response_model=ApiResponse, tags=["health"])
 async def deep_ping(response: Response, logger=Depends(get_logger)):
     logger.info("Parser deep ping endpoint called")
-    time.sleep(1)
+    await asyncio.sleep(1)
     api_response = ApiResponse(
         status_code=status.HTTP_200_OK,
         detail="Parser deep ping successful",

@@ -3,7 +3,6 @@ import json
 import re
 from datetime import datetime
 from http import HTTPStatus
-from http.client import HTTPException
 from typing import Self, Callable, Any
 from uuid import UUID
 
@@ -30,12 +29,18 @@ class SfsMdReceiptParser(ReceiptParserBase):
         self.url = url
         self.query_db_api = db_api
 
-    def get_receipt(self) -> SfsMdReceipt | None:
-        resp = ApiResponse(
-            **self.query_db_api("/receipt/get-by-url", "POST", {"url": self.url})
-        )
+    async def get_receipt(self) -> SfsMdReceipt | None:
+        resp = await self.query_db_api("/receipt/get-by-url", "POST", {"url": self.url})
+
+        if not isinstance(resp, dict):
+            self.logger.error(
+                f"Invalid db_api response: expected dict, got {type(resp).__name__}"
+            )
+            raise ValueError("Invalid Plant-Based API response")
+
+        resp = ApiResponse(**resp)
         if resp.status_code != HTTPStatus.OK:
-            raise HTTPException(status_code=500, detail="Error calling pbapi")
+            raise ValueError(f"Failed to get receipt: {resp.detail}")
 
         if resp.data:
             return SfsMdReceipt(**resp.data)
@@ -108,12 +113,21 @@ class SfsMdReceiptParser(ReceiptParserBase):
         )
         return self
 
-    def persist(self) -> SfsMdReceipt:
-        receipt = self.receipt.model_dump()
+    async def persist(self) -> SfsMdReceipt:
+        receipt = self.receipt.model_dump(mode="json")
         self.logger.info(receipt)
-        resp = self.query_db_api("/receipt/get-or-create", "POST", receipt)
-        if resp.status_code != HTTPStatus.OK:
-            raise HTTPException(status_code=500, detail="Error persisting receipt")
+
+        resp = await self.query_db_api("/receipt/get-or-create", "POST", receipt)
+
+        if not isinstance(resp, dict):
+            self.logger.error(
+                f"Invalid db_api response: expected dict, got {type(resp).__name__}"
+            )
+            raise ValueError("Invalid Plant-Based API response")
+
+        if resp.get("status_code") != HTTPStatus.OK:
+            detail = resp.get("detail", "Unknown error")
+            raise ValueError(f"Failed to persist receipt: {detail}")
 
         return self.receipt
 

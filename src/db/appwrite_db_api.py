@@ -29,7 +29,7 @@ class AppwriteDbApi(DbApiBase):
         self.api_endpoint = os.environ.get("APPWRITE_FUNCTION_API_ENDPOINT")
         self.project_id = os.environ.get("APPWRITE_FUNCTION_PROJECT_ID")
 
-    def __call__(
+    def _execute(
         self,
         uri: str,
         method: str,

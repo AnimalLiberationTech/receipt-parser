@@ -7,7 +7,7 @@ from src.parsers.sfs_md.receipt_parser import SfsMdReceiptParser
 from src.schemas.common import ApiResponse
 
 
-def parse_from_url_handler(
+async def parse_from_url_handler(
     url: str, user_id: UUID, logger: Any, db_api: Callable[[str, str, Any], Any]
 ) -> ApiResponse:
     parser = SfsMdReceiptParser(logger, user_id, url, db_api)
@@ -15,7 +15,9 @@ def parse_from_url_handler(
         return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail="Unsupported URL")
 
     try:
-        receipt = parser.get_receipt()
+        receipt = await parser.get_receipt()
+    except ValueError as ve:
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail=ve)
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error retrieving receipt: {e}")
         return ApiResponse(
@@ -33,9 +35,13 @@ def parse_from_url_handler(
             )
 
         try:
-            receipt = parser.parse_html(receipt_html).build_receipt().persist()
-        except ValueError as e:
-            return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail=str(e))
+            receipt = parser.parse_html(receipt_html).build_receipt()
+            receipt = await receipt.persist()
+        except ValueError as ve:
+            return ApiResponse(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail=ve,
+            )
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Unexpected error parsing receipt: {e}")
             return ApiResponse(

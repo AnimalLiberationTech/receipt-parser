@@ -26,7 +26,7 @@ class LocalDbApi(DbApiBase):
         self.logger = logger
         self.base_url = base_url.rstrip("/")
 
-    def __call__(
+    def _execute(
         self,
         uri: str,
         method: str,
