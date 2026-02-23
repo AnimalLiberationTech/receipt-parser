@@ -13,11 +13,7 @@ class TestOsm(TestCase):
     @patch("src.helpers.osm._nominatim")
     def test_lookup_osm_data(self, mock_nominatim):
         # Mock the element's toJSON() method to return a dict
-        mock_json_elem = {
-            "place_id": 12345,
-            "lat": "51.5074",
-            "lon": "0.1278"
-        }
+        mock_json_elem = {"place_id": 12345, "lat": "51.5074", "lon": "0.1278"}
 
         # Mock the first result element
         mock_first_elem = MagicMock()

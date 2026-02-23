@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from http import HTTPStatus
@@ -9,7 +8,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from azure.functions import FunctionApp, AuthLevel, HttpRequest, HttpResponse
 
 from src.adapters.auth.google_auth import GoogleAuth, GOOGLE_CALLBACK_URI
-from src.handlers.add_barcodes import add_barcodes_handler
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
 from src.helpers.azure_function import (
@@ -21,11 +19,14 @@ from src.helpers.azure_function import (
     format_invalid_user_id_cookie,
 )
 from src.helpers.logging import set_logger
-from src.helpers.session import validate_session
 from src.schemas.user_session import GoogleUserSession
 
 logger = set_logger()
 app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+
+
+def validate_session(cookies, logger):
+    pass
 
 
 @app.route("parse-from-url", methods=["POST"])
@@ -46,16 +47,6 @@ def link_shop(req: HttpRequest) -> HttpResponse:
     logger.info(req.form.to_dict())
     url, user_id, receipt_id = get_form_data(req, "url", "user_id", "receipt_id")
     return build_response(*link_shop_handler(url, user_id, receipt_id, logger))
-
-
-@app.route("add-barcodes", methods=["POST"])
-def add_barcodes(req: HttpRequest) -> HttpResponse:
-    if not validate_session(get_cookies(req.headers, logger), logger):
-        HttpResponse(status_code=HTTPStatus.UNAUTHORIZED)
-
-    logger.info(req.form.to_dict())
-    shop_id, items = get_form_data(req, "shop_id", "items")
-    return build_response(*add_barcodes_handler(shop_id, json.loads(items), logger))
 
 
 @app.route("google-login", methods=["GET"])
@@ -108,5 +99,3 @@ def logout(req: HttpRequest) -> HttpResponse:  # pylint: disable=unused-argument
             "Set-Cookie": format_invalid_user_id_cookie(),
         },
     )
-
-

@@ -205,7 +205,6 @@ class TestSfsMdReceiptParser(TestCase):
 
                 self.assertGreater(len(parsed_receipt.purchases), 0)
 
-
     def test_parse_chain_methods(self):
         """Test that parse_html and build_receipt can be chained"""
         logger = Mock()
@@ -413,7 +412,6 @@ class TestSfsMdReceiptParser(TestCase):
                     self.assertIsInstance(purchase.name, str)
                     self.assertGreater(len(purchase.name.strip()), 0)
 
-
     def test_cash_register_id_extracted_correctly(self):
         """Test that cash register ID is extracted correctly"""
         logger = Mock()
@@ -593,7 +591,6 @@ class TestSfsMdReceiptParser(TestCase):
         with self.assertRaises(AttributeError):
             parser.build_receipt()
 
-
     def test_receipt_total_matches_sum_of_purchases(self):
         """Test that receipt total amount roughly matches sum of purchases
         Kaufland doesn't pass this test because it doesn't include discount in the total amount
@@ -652,7 +649,6 @@ class TestSfsMdReceiptParser(TestCase):
 
         # Should not raise an error and should properly decode entities
         self.assertIsInstance(result, SfsMdReceiptParser)
-
 
     def test_multiple_parsers_dont_interfere(self):
         """Test that multiple parser instances don't interfere with each other"""
@@ -914,7 +910,6 @@ class TestSfsMdReceiptParser(TestCase):
                 self.assertEqual(receipt.date.month, expected_month)
                 self.assertEqual(receipt.date.day, expected_day)
 
-
     def test_parse_html_with_whitespace_variations(self):
         """Test that parser handles HTML with different whitespace patterns"""
         logger = Mock()
@@ -1102,4 +1097,3 @@ class TestSfsMdReceiptParserAsync:
         assert result is not None
         assert result == parser.receipt
         assert isinstance(result, type(LIN_RECEIPT))
-
