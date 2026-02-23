@@ -4,6 +4,7 @@ Translates between Appwrite's context object and ASGI protocol.
 """
 
 import json
+import urllib.parse
 from fastapi import FastAPI
 
 
@@ -36,10 +37,18 @@ class AppwriteFastAPIAdapter:
             value_str = str(value) if not isinstance(value, str) else value
             headers.append((key_lower.encode("latin-1"), value_str.encode("latin-1")))
 
-        # Parse query string
         query_string = b""
         if hasattr(context.req, "url") and "?" in context.req.url:
             query_string = context.req.url.split("?", 1)[1].encode("latin-1")
+
+        if not query_string:
+            query_params = getattr(context.req, "query", None)
+            if isinstance(query_params, (bytes, bytearray)):
+                query_string = bytes(query_params)
+            elif isinstance(query_params, str):
+                query_string = query_params.lstrip("?").encode("utf-8")
+            elif isinstance(query_params, (dict, list, tuple)):
+                query_string = urllib.parse.urlencode(query_params, doseq=True).encode("ascii")
 
         scope = {
             "type": "http",
