@@ -32,7 +32,7 @@ class AppwriteLogger:
 
 def build_db_api(context, logger):
     """Build an AppwriteDbApi instance from Appwrite context."""
-    x_appwrite_key = context.req.headers.get("x-appwrite-key")
+    x_appwrite_key = (context.req.headers or {}).get("x-appwrite-key")
     return AppwriteDbApi(x_appwrite_key, logger)
 
 
