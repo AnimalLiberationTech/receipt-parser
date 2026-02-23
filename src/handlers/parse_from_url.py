@@ -17,7 +17,7 @@ async def parse_from_url_handler(
     try:
         receipt = await parser.get_receipt()
     except ValueError as ve:
-        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail=ve)
+        return ApiResponse(status_code=HTTPStatus.BAD_REQUEST, detail=str(ve))
     except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error retrieving receipt: {e}")
         return ApiResponse(
@@ -40,7 +40,7 @@ async def parse_from_url_handler(
         except ValueError as ve:
             return ApiResponse(
                 status_code=HTTPStatus.BAD_REQUEST,
-                detail=ve,
+                detail=str(ve),
             )
         except Exception as e:  # pylint: disable=broad-except
             logger.error(f"Unexpected error parsing receipt: {e}")

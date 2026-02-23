@@ -2,9 +2,8 @@ import asyncio
 import logging
 import os
 from http import HTTPStatus
-from typing import Dict, Any
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from starlette.requests import Request
@@ -18,7 +17,6 @@ from src.db.db_api_base import DbApiBase
 from src.db.local_db_api import LocalDbApi
 from src.handlers.link_shop import link_shop_handler
 from src.handlers.parse_from_url import parse_from_url_handler
-from src.handlers.shops import shops_handler
 from src.schemas.common import ApiResponse, OsmType
 from src.schemas.request_schemas import (
     ParseFromUrlRequest,
@@ -139,42 +137,6 @@ async def link_shop(
     api_response = await asyncio.to_thread(
         link_shop_handler, osm_type, osm_key, request.receipt_id, logger, db_api
     )
-    return with_status(api_response, response)
-
-
-@app.get("/shops", response_model=ApiResponse, tags=["shops"])
-async def get_shops(
-    country_code: str | None = Query(None),
-    company_id: str | None = Query(None),
-    lat_min: float | None = Query(None),
-    lat_max: float | None = Query(None),
-    lon_min: float | None = Query(None),
-    lon_max: float | None = Query(None),
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    response: Response = None,
-    logger=Depends(get_logger),
-):
-    """Get shops with optional filtering."""
-    logger.info("Get shops endpoint called")
-
-    query_params: Dict[str, Any] = {}
-    if country_code:
-        query_params["country_code"] = country_code
-    if company_id:
-        query_params["company_id"] = company_id
-    if lat_min is not None:
-        query_params["lat_min"] = lat_min
-    if lat_max is not None:
-        query_params["lat_max"] = lat_max
-    if lon_min is not None:
-        query_params["lon_min"] = lon_min
-    if lon_max is not None:
-        query_params["lon_max"] = lon_max
-    query_params["limit"] = limit
-    query_params["offset"] = offset
-
-    api_response = shops_handler(query_params, logger)
     return with_status(api_response, response)
 
 

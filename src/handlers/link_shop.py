@@ -9,7 +9,7 @@ from src.schemas.request_schemas import AddShopPayload
 from src.schemas.shop import Shop
 
 
-def link_shop_handler(
+async def link_shop_handler(
     osm_type: OsmType,
     osm_key: int,
     receipt_id: str,
@@ -22,7 +22,7 @@ def link_shop_handler(
             status_code=HTTPStatus.BAD_REQUEST, detail="Failed to get OSM shop details"
         )
 
-    resp = db_api("/receipt/get-by-id", "GET", query={"receipt_id": receipt_id})
+    resp = await db_api("/receipt/get-by-id", "GET", query={"receipt_id": receipt_id})
     logger.info(resp)
     if not resp or resp.get("status_code") != HTTPStatus.OK:
         logger.error(f"Failed to get receipt with id {receipt_id}")
@@ -47,7 +47,7 @@ def link_shop_handler(
         creator_user_id=UUID(receipt["user_id"]),
     )
     logger.info(shop.model_dump(mode="json"))
-    resp = db_api("/shop/get-or-create", "POST", shop.model_dump(mode="json"))
+    resp = await db_api("/shop/get-or-create", "POST", shop.model_dump(mode="json"))
     logger.info(resp)
     if not resp or resp.get("status_code") != HTTPStatus.OK:
         logger.error("Failed to get or create shop")
@@ -58,7 +58,7 @@ def link_shop_handler(
     shop = resp["data"]
 
     payload = AddShopPayload(shop_id=shop["id"], receipt=receipt)
-    resp = db_api("/receipt/add-shop-id", "POST", payload.model_dump(mode="json"))
+    resp = await db_api("/receipt/add-shop-id", "POST", payload.model_dump(mode="json"))
     logger.info(resp)
     if not resp or resp.get("status_code") != HTTPStatus.OK:
         logger.error("Failed to add shop id to receipt")
