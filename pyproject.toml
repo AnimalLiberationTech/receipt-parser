@@ -8,6 +8,8 @@ dependencies = [
     "pydantic[email]",
     "python-dotenv",
     "fastapi>=0.129.0",
+    "urllib3>=2.6.3",
+    "pillow>=12.1.1",
 ]
 
 [dependency-groups]

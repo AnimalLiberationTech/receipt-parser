@@ -1182,8 +1182,10 @@ dependencies = [
     { name = "doppler-sdk" },
     { name = "fastapi" },
     { name = "osmpythontools" },
+    { name = "pillow" },
     { name = "pydantic", extra = ["email"] },
     { name = "python-dotenv" },
+    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -1202,8 +1204,10 @@ requires-dist = [
     { name = "doppler-sdk" },
     { name = "fastapi", specifier = ">=0.129.0" },
     { name = "osmpythontools" },
+    { name = "pillow", specifier = ">=12.1.1" },
     { name = "pydantic", extras = ["email"] },
     { name = "python-dotenv" },
+    { name = "urllib3", specifier = ">=2.6.3" },
 ]
 
 [package.metadata.requires-dev]
