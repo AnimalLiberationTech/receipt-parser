@@ -5,6 +5,8 @@ from typing import Tuple
 import requests
 from OSMPythonTools.nominatim import Nominatim
 
+from src.schemas.common import OsmType
+
 OSM_HOST = "https://www.openstreetmap.org"
 
 logger = logging.getLogger(__name__)
@@ -12,28 +14,27 @@ logger = logging.getLogger(__name__)
 _nominatim = Nominatim()
 
 
-def get_osm_id(osm_type: str, osm_key: str) -> str:
+def get_osm_id(osm_type: OsmType, osm_key: int) -> str:
     return f"{osm_type[0].upper()}{osm_key}"
 
 
-def lookup_osm_data(osm_type: str, osm_id: str) -> dict:
-    osm_id_str = get_osm_id(osm_type, osm_id)
+def lookup_osm_data(osm_type: OsmType, osm_key: int) -> dict:
+    osm_id_str = get_osm_id(osm_type, osm_key)
     try:
         result = _nominatim.query(osm_id_str, lookup=True)
-        if result and len(result) > 0:
-            elem = result[0]
+        if result and hasattr(result, "firstResult"):
+            elem = result.firstResult().toJSON()
             return {
-                "place_id": elem.placeId(),
-                "osm_type": elem.type(),
-                "osm_id": elem.id(),
-                "display_name": elem.displayName(),
-                "lat": elem.lat(),
-                "lon": elem.lon(),
-                "address": elem.address(),
-                "extratags": elem.tag("extratags") if elem.tag("extratags") else {},
+                "place_id": elem["place_id"],
+                "osm_type": osm_type,
+                "osm_id": osm_key,
+                "display_name": result.displayName(),
+                "lat": elem["lat"],
+                "lon": elem["lon"],
+                "address": result.address(),
             }
     except (AttributeError, IndexError, KeyError, TypeError) as e:
-        # OSM object doesn't exist or has unexpected structure
+        # OSM object doesn't exist or has an unexpected structure
         logger.warning("OSM lookup failed for %s: %s", osm_id_str, e)
     except requests.exceptions.RequestException as e:
         logger.warning("OSM network request failed for %s: %s", osm_id_str, e)

@@ -8,11 +8,10 @@ from src.schemas.common import ItemBarcodeStatus
 from src.schemas.schema_base import SchemaBase
 
 
-# there could be more than one item with the same name in the same shop,
-# it has be decided how to handle this conflict
+# there could be more than one item with the same name in the same shop
 class ShopItem(SchemaBase):
     id: Optional[UUID] = Field(default_factory=uuid4)
-    shop_id: UUID
+    shop_id: int
     name: str
     status: ItemBarcodeStatus
     barcode: str | None = None

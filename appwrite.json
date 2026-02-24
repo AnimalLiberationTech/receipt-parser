@@ -11,12 +11,12 @@
                 "any"
             ],
             "events": [],
-            "scopes": ["users.read"],
+            "scopes": ["execution.write"],
             "schedule": "",
             "timeout": 15,
             "enabled": true,
             "logging": true,
-            "entrypoint": "src/adapters/appwrite_functions.py",
+            "entrypoint": "src/adapters/api/appwrite_functions.py",
             "commands": "pip install -r requirements.txt",
             "path": ".",
             "variables": {

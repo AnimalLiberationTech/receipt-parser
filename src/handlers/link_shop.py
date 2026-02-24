@@ -1,64 +1,73 @@
 from http import HTTPStatus
+from typing import Any, Callable
+from uuid import UUID
 
-from src.adapters.db.cosmos_db_core import init_db_session
-from src.helpers.osm import validate_osm_url, parse_osm_url, lookup_osm_data
-from src.schemas.common import TableName, OsmType
+from src.helpers.osm import lookup_osm_data
+from src.schemas.common import OsmType, ApiResponse
 from src.schemas.osm_data import OsmData
+from src.schemas.request_schemas import AddShopPayload
 from src.schemas.shop import Shop
 
 
-def link_shop_handler(
-    url: str, user_id: str, receipt_id: str, logger
-) -> (HTTPStatus, dict):
-    if not validate_osm_url(url):
-        return HTTPStatus.BAD_REQUEST, {"msg": "Unsupported URL"}
-
-    session = init_db_session(logger)
-    session.use_table(TableName.RECEIPT)
-    receipt = session.read_one(receipt_id, partition_key=user_id)
-    if not receipt:
-        return HTTPStatus.NOT_FOUND, {"msg": "Receipt not found"}
-
-    # double check that the shop doesn't exist
-    session.use_table(TableName.SHOP)
-    shops = session.read_many(
-        {"company_id": receipt["company_id"], "shop_address": receipt["shop_address"]},
-        partition_key=receipt["country_code"],
-        limit=1,
-    )
-    if shops:
-        shop = shops[0]
-    else:
-        try:
-            osm_type, osm_key = parse_osm_url(url)
-        except ValueError:
-            return HTTPStatus.BAD_REQUEST, {"msg": "Invalid OSM URL"}
-
-        osm_shop_data = lookup_osm_data(osm_type, osm_key)
-        if not osm_shop_data:
-            return HTTPStatus.BAD_REQUEST, {"msg": "Failed to get OSM shop details"}
-
-        osm_data = OsmData(
-            type=OsmType(osm_type),
-            key=int(osm_key),
-            lat=osm_shop_data["lat"],
-            lon=osm_shop_data["lon"],
-            display_name=osm_shop_data["display_name"],
-            address=osm_shop_data["address"],
+async def link_shop_handler(
+    osm_type: OsmType,
+    osm_key: int,
+    receipt_id: str,
+    logger: Any,
+    db_api: Callable[[str, str, Any], Any],
+) -> ApiResponse:
+    osm_shop_data = lookup_osm_data(osm_type, osm_key)
+    if not osm_shop_data:
+        return ApiResponse(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Failed to get OSM shop details"
         )
-        shop = Shop(
-            country_code=receipt["country_code"],
-            company_id=receipt["company_id"],
-            shop_address=receipt["shop_address"],
-            osm_data=osm_data,
-        ).model_dump(mode="json")
-        session.use_table(TableName.SHOP)
-        session.create_one(shop)
 
-    session.use_table(TableName.RECEIPT)
-    receipt["shop_id"] = shop["id"]
-    session.update_one(receipt_id, receipt)
-    return HTTPStatus.OK, {
-        "msg": "Shop successfully linked",
-        "data": {"shop_id": shop["id"]},
-    }
+    resp = await db_api("/receipt/get-by-id", "GET", query={"receipt_id": receipt_id})
+    logger.info(resp)
+    if not resp or resp.get("status_code") != HTTPStatus.OK:
+        logger.error(f"Failed to get receipt with id {receipt_id}")
+        return ApiResponse(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Failed to get the receipt"
+        )
+
+    receipt = resp["data"]
+    osm_data = OsmData(
+        type=osm_type,
+        key=osm_key,
+        lat=osm_shop_data["lat"],
+        lon=osm_shop_data["lon"],
+        display_name=osm_shop_data["display_name"],
+        address=osm_shop_data["address"],
+    )
+    shop = Shop(
+        country_code=receipt["country_code"],
+        company_id=receipt["company_id"],
+        address=receipt["shop_address"],
+        osm_data=osm_data,
+        creator_user_id=UUID(receipt["user_id"]),
+    )
+    logger.info(shop.model_dump(mode="json"))
+    resp = await db_api("/shop/get-or-create", "POST", shop.model_dump(mode="json"))
+    logger.info(resp)
+    if not resp or resp.get("status_code") != HTTPStatus.OK:
+        logger.error("Failed to get or create shop")
+        return ApiResponse(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Failed to get or create shop"
+        )
+
+    shop = resp["data"]
+
+    payload = AddShopPayload(shop_id=shop["id"], receipt=receipt)
+    resp = await db_api("/receipt/add-shop-id", "POST", payload.model_dump(mode="json"))
+    logger.info(resp)
+    if not resp or resp.get("status_code") != HTTPStatus.OK:
+        logger.error("Failed to add shop id to receipt")
+        return ApiResponse(
+            status_code=HTTPStatus.BAD_REQUEST, detail="Failed to add shop id to receipt"
+        )
+
+    return ApiResponse(
+        status_code=HTTPStatus.OK,
+        detail="Shop successfully linked",
+        data={"shop_id": shop["id"]},
+    )

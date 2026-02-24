@@ -52,12 +52,12 @@ class TestSfsMdReceipt(TestCase):
                 total_amount=self.total_amount,
                 purchases=self.purchases,
                 receipt_url="http://example.com",
-                shop_id="NOT_UUID",
+                shop_id="NOT_INT",
             )
 
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 2)
         self.assertEqual(errors[0]["loc"], ("user_id",))
-        self.assertEqual(errors[0]["msg"], "Input should be an instance of UUID")
+        self.assertTrue(errors[0]["msg"].startswith("Input should be a valid UUID"))
         self.assertEqual(errors[1]["loc"], ("shop_id",))
-        self.assertEqual(errors[1]["msg"], "Input should be an instance of UUID")
+        self.assertTrue(errors[1]["msg"].startswith("Input should be a valid integer"))

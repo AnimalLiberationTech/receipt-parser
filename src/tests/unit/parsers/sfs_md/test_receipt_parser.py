@@ -1,7 +1,10 @@
 import os
+from http import HTTPStatus
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 from uuid import UUID
+
+import pytest
 
 from src.parsers.sfs_md.receipt_parser import SfsMdReceiptParser
 from src.tests import load_stub_file, USER_ID_1
@@ -201,40 +204,6 @@ class TestSfsMdReceiptParser(TestCase):
                 )
 
                 self.assertGreater(len(parsed_receipt.purchases), 0)
-
-    def test_persist_calls_db_api(self):
-        """Test that persist method calls the database API"""
-        logger = Mock()
-        db_api = Mock()
-        db_api.return_value = None
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
-
-        result = parser.persist()
-
-        db_api.assert_called_once_with(
-            "/receipt/get-or-create", "POST", parser.receipt.model_dump()
-        )
-        self.assertEqual(result, parser.receipt)
-
-    def test_get_receipt_calls_db_api(self):
-        """Test that get_receipt method calls the database API"""
-        logger = Mock()
-        db_api = Mock()
-        db_api.return_value = LIN_RECEIPT.model_dump()
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        result = parser.get_receipt()
-
-        db_api.assert_called_once_with(
-            "/receipt/get-by-url", "POST", {"url": LIN_RECEIPT.receipt_url}
-        )
-        self.assertEqual(result, LIN_RECEIPT)
 
     def test_parse_chain_methods(self):
         """Test that parse_html and build_receipt can be chained"""
@@ -443,32 +412,6 @@ class TestSfsMdReceiptParser(TestCase):
                     self.assertIsInstance(purchase.name, str)
                     self.assertGreater(len(purchase.name.strip()), 0)
 
-    def test_persist_logs_receipt_data(self):
-        """Test that persist method logs receipt data"""
-        logger = Mock()
-        db_api = Mock()
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
-        parser.persist()
-
-        logger.info.assert_called_once()
-
-    def test_get_receipt_when_not_found(self):
-        """Test that get_receipt returns None when receipt not found"""
-        logger = Mock()
-        db_api = Mock()
-        db_api.return_value = None
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        result = parser.get_receipt()
-
-        self.assertIsNone(result)
-
     def test_cash_register_id_extracted_correctly(self):
         """Test that cash register ID is extracted correctly"""
         logger = Mock()
@@ -648,15 +591,6 @@ class TestSfsMdReceiptParser(TestCase):
         with self.assertRaises(AttributeError):
             parser.build_receipt()
 
-    def test_persist_without_building_receipt_raises_error(self):
-        """Test that calling persist without building receipt first raises an error"""
-        logger = Mock()
-        db_api = Mock()
-        parser = SfsMdReceiptParser(logger, UUID(USER_ID_1), LIN_RECEIPT_URL, db_api)
-
-        with self.assertRaises(AttributeError):
-            parser.persist()
-
     def test_receipt_total_matches_sum_of_purchases(self):
         """Test that receipt total amount roughly matches sum of purchases
         Kaufland doesn't pass this test because it doesn't include discount in the total amount
@@ -715,37 +649,6 @@ class TestSfsMdReceiptParser(TestCase):
 
         # Should not raise an error and should properly decode entities
         self.assertIsInstance(result, SfsMdReceiptParser)
-
-    def test_get_receipt_with_db_api_exception(self):
-        """Test that exceptions from db_api are propagated"""
-        logger = Mock()
-        db_api = Mock()
-        db_api.side_effect = Exception("Database error")
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-
-        with self.assertRaises(Exception) as context:
-            parser.get_receipt()
-
-        self.assertIn("Database error", str(context.exception))
-
-    def test_persist_with_db_api_exception(self):
-        """Test that exceptions from db_api during persist are propagated"""
-        logger = Mock()
-        db_api = Mock()
-        db_api.side_effect = Exception("Database error during persist")
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
-
-        with self.assertRaises(Exception) as context:
-            parser.persist()
-
-        self.assertIn("Database error during persist", str(context.exception))
 
     def test_multiple_parsers_dont_interfere(self):
         """Test that multiple parser instances don't interfere with each other"""
@@ -1007,22 +910,6 @@ class TestSfsMdReceiptParser(TestCase):
                 self.assertEqual(receipt.date.month, expected_month)
                 self.assertEqual(receipt.date.day, expected_day)
 
-    def test_persist_returns_receipt(self):
-        """Test that persist method returns the receipt object"""
-        logger = Mock()
-        db_api = Mock()
-
-        parser = SfsMdReceiptParser(
-            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
-        )
-        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
-
-        result = parser.persist()
-
-        self.assertIsNotNone(result)
-        self.assertEqual(result, parser.receipt)
-        self.assertIsInstance(result, type(LIN_RECEIPT))
-
     def test_parse_html_with_whitespace_variations(self):
         """Test that parser handles HTML with different whitespace patterns"""
         logger = Mock()
@@ -1076,3 +963,137 @@ class TestSfsMdReceiptParser(TestCase):
                 for purchase in receipt.purchases:
                     self.assertNotEqual(purchase.name, "")
                     self.assertGreater(len(purchase.name.strip()), 0)
+
+
+# Async tests using pytest style (not inheriting from TestCase)
+class TestSfsMdReceiptParserAsync:
+    """Async tests for SfsMdReceiptParser using pytest style"""
+
+    @pytest.mark.asyncio
+    async def test_persist_calls_db_api(self):
+        """Test that persist method calls the database API"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.return_value = {"status_code": HTTPStatus.OK, "data": None}
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
+
+        result = await parser.persist()
+
+        db_api.assert_called_once_with(
+            "/receipt/get-or-create", "POST", parser.receipt.model_dump(mode="json")
+        )
+        assert result == parser.receipt
+
+    @pytest.mark.asyncio
+    async def test_get_receipt_calls_db_api(self):
+        """Test that get_receipt method calls the database API"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.return_value = {
+            "status_code": HTTPStatus.OK,
+            "data": LIN_RECEIPT.model_dump(mode="json"),
+        }
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        result = await parser.get_receipt()
+
+        db_api.assert_called_once_with(
+            "/receipt/get-by-url", "POST", {"url": LIN_RECEIPT.receipt_url}
+        )
+        assert result == LIN_RECEIPT
+
+    @pytest.mark.asyncio
+    async def test_persist_logs_receipt_data(self):
+        """Test that persist method logs receipt data"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.return_value = {"status_code": HTTPStatus.OK, "data": None}
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
+        await parser.persist()
+
+        logger.info.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_receipt_when_not_found(self):
+        """Test that get_receipt returns None when receipt not found"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.return_value = {"status_code": HTTPStatus.OK, "data": None}
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        result = await parser.get_receipt()
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_get_receipt_with_db_api_exception(self):
+        """Test that exceptions from db_api are propagated"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.side_effect = Exception("Database error")
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+
+        with pytest.raises(Exception) as exc_info:
+            await parser.get_receipt()
+
+        assert "Database error" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_persist_with_db_api_exception(self):
+        """Test that exceptions from db_api during persist are propagated"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.side_effect = Exception("Database error during persist")
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
+
+        with pytest.raises(Exception) as exc_info:
+            await parser.persist()
+
+        assert "Database error during persist" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_persist_without_building_receipt_raises_error(self):
+        """Test that calling persist without building receipt first raises an error"""
+        logger = Mock()
+        db_api = AsyncMock()
+        parser = SfsMdReceiptParser(logger, UUID(USER_ID_1), LIN_RECEIPT_URL, db_api)
+
+        with pytest.raises(AttributeError):
+            await parser.persist()
+
+    @pytest.mark.asyncio
+    async def test_persist_returns_receipt(self):
+        """Test that persist method returns the receipt object"""
+        logger = Mock()
+        db_api = AsyncMock()
+        db_api.return_value = {"status_code": HTTPStatus.OK, "data": None}
+
+        parser = SfsMdReceiptParser(
+            logger, UUID(USER_ID_1), LIN_RECEIPT.receipt_url, db_api
+        )
+        parser.parse_html(load_stub_file(LIN_RECEIPT_PATH)).build_receipt()
+
+        result = await parser.persist()
+
+        assert result is not None
+        assert result == parser.receipt
+        assert isinstance(result, type(LIN_RECEIPT))

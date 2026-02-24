@@ -28,4 +28,4 @@ class TestOsmData(TestCase):
         errors = ctx.exception.errors()
         self.assertEqual(len(errors), 1)
         self.assertEqual(errors[0]["loc"], ("type",))
-        self.assertEqual(errors[0]["msg"], "Input should be an instance of OsmType")
+        self.assertEqual(errors[0]["msg"], "Input should be 'node', 'relation' or 'way'")

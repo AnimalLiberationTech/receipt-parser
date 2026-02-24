@@ -6,22 +6,12 @@ from unittest.mock import Mock
 
 import requests
 
-from src.adapters.db.cosmos_db_core import CosmosDBCoreAdapter
 from src.schemas.common import EnvType, TableName, TablePartitionKey, CountryCode
 from src.tests import USER_ID_1, SHOP_ITEM_ID_1, BARCODE_1, SHOP_ID_1
 
 RECEIPT_URL = "https://mev.sfs.md/receipt-verifier/B93BDE722E208AACBA2E85E4EF754E5E"
 RECEIPT_ID = "md_j403001574_97568"
 KL_NODE_URL = "https://www.openstreetmap.org/node/10239783211"
-
-
-class TestStaticPages(TestCase):
-    def test_tos(self):
-        response = requests.get(
-            f"https://{os.environ['WEBSITE_HOSTNAME']}/terms-of-service", timeout=5
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
 
 # class TestHome(TestCase):
 #     # doesn't require db adapter
@@ -59,7 +49,7 @@ class TestStaticPages(TestCase):
 #                 "_id": RECEIPT_ID,
 #                 "user_id": USER_ID_1,
 #                 "country_code": CountryCode.MOLDOVA,
-#                 "shop_address": "test_shop_address",
+#                 "address": "test_shop_address",
 #                 "company_id": "test_company_id",
 #             }
 #         )

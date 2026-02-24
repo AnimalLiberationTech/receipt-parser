@@ -2,6 +2,7 @@ import html
 import json
 import re
 from datetime import datetime
+from http import HTTPStatus
 from typing import Self, Callable, Any
 from uuid import UUID
 
@@ -20,19 +21,29 @@ class SfsMdReceiptParser(ReceiptParserBase):
     receipt: SfsMdReceipt
     url: str
 
-    def __init__(self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]):
+    def __init__(
+        self, logger, user_id: UUID, url: str, db_api: Callable[[str, str, Any], Any]
+    ):
         self.logger = logger
         self.user_id = user_id
         self.url = url
         self.query_db_api = db_api
 
-    def get_receipt(self) -> SfsMdReceipt | None:
-        receipt = self.query_db_api(
-            "/receipt/get-by-url", "POST", {"url": self.url}
-        )
+    async def get_receipt(self) -> SfsMdReceipt | None:
+        resp = await self.query_db_api("/receipt/get-by-url", "POST", {"url": self.url})
 
-        if receipt and isinstance(receipt, dict):
-            return SfsMdReceipt(**receipt)
+        if not isinstance(resp, dict):
+            self.logger.error(
+                f"Invalid db_api response: expected dict, got {type(resp).__name__}"
+            )
+            raise ValueError("Invalid Plant-Based API response")
+
+        if resp.get("status_code") != HTTPStatus.OK:
+            detail = resp.get("detail", "Unknown error")
+            raise ValueError(f"Failed to get receipt: {detail}")
+
+        if resp.get("data"):
+            return SfsMdReceipt(**resp.get("data"))
 
         return None
 
@@ -102,10 +113,22 @@ class SfsMdReceiptParser(ReceiptParserBase):
         )
         return self
 
-    def persist(self) -> SfsMdReceipt:
-        receipt = self.receipt.model_dump()
+    async def persist(self) -> SfsMdReceipt:
+        receipt = self.receipt.model_dump(mode="json")
         self.logger.info(receipt)
-        self.query_db_api("/receipt/get-or-create", "POST", receipt)
+
+        resp = await self.query_db_api("/receipt/get-or-create", "POST", receipt)
+
+        if not isinstance(resp, dict):
+            self.logger.error(
+                f"Invalid db_api response: expected dict, got {type(resp).__name__}"
+            )
+            raise ValueError("Invalid Plant-Based API response")
+
+        if resp.get("status_code") != HTTPStatus.OK:
+            detail = resp.get("detail", "Unknown error")
+            raise ValueError(f"Failed to persist receipt: {detail}")
+
         return self.receipt
 
     def validate_receipt_url(self) -> bool:
